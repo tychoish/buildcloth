@@ -2,10 +2,16 @@ PYTHONBIN = python
 output = build
 modsrc = buildergen
 
-.PHONY:embeded
+.PHONY:embeded testpy2 testpy3
 
-test:$(wildcard $(modsrc)*.py)
-	@$(PYTHONBIN) test.py
+test:testpy2 testpy3
+
+testpy2:$(wildcard $(modsrc)*.py)
+	@/usr/bin/python2 test.py
+	@echo [test]: Python 2 tests complete.
+testpy3:$(wildcard $(modsrc)*.py)
+	@/usr/bin/python3 test.py
+	@echo [test]: Python 3 tests complete.
 
 $(output)/: 
 	@mkdir $@
