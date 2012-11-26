@@ -2,7 +2,7 @@ PYTHONBIN = python
 output = build
 modsrc = buildergen
 
-.PHONY:embeded testpy2 testpy3
+.PHONY:embedded testpy2 testpy3
 
 test:testpy2 testpy3
 
@@ -20,4 +20,4 @@ $(output)/:
 $(output)/makefile_builder.py:$(output)/ $(modsrc)/buildfile.py $(modsrc)/makefilegen.py bin/build_embeded.py
 	@$(PYTHONBIN) bin/build_embeded.py $@
 	@echo [build]: created $@
-embeded:test $(output)/makefile_builder.py
+embedded:test $(output)/makefile_builder.py
