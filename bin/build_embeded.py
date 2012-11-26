@@ -5,17 +5,11 @@ import argparse
 def content():
     o = ['#!/usr/bin/python\n']
 
-    with open('buildergen/makefilegen.py', 'r') as f:
-        for lines in f.readlines()[:14]:
-            o.append(lines.rstrip())
-    
-    o.append('\n')
-
     with open('buildergen/buildfile.py', 'r') as f: 
         o.append(f.read())
 
     with open('buildergen/makefilegen.py', 'r') as f:
-        for lines in f.readlines()[16:]:
+        for lines in f.readlines()[17:]:
             o.append(lines.rstrip())
         
     return o
