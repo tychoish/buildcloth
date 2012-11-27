@@ -45,6 +45,43 @@ class TestMakefileBuilderCommentMethods(TestCase):
         self.assertEqual(self.m.get_block('message1'), self.m.get_block('msg1'))
         self.assertEqual(self.m.get_block('msg1') + self.m.get_block('message1'), self.m.builder['_all'])
 
+class TestMakefileBUilderJobMethod(TestCase): 
+    @classmethod
+    def setUp(self):
+        self.m = MakefileBuilder()
+        self.job = 'git update-index --assume-unchanged'
+        self.job_make = '\t' + self.job
+        self.job_quiet = '\t@' + self.job
+        self.job_ignore = '\t-' + self.job
+        self.job_quiet_ignore = '\t@-' + self.job
+
+    def test_job_default(self):
+        self.m.job(self.job, block='test')
+        self.assertEqual(self.m.get_block('test')[0], self.job_quiet)
+
+    def test_job_ignored_named(self):
+        self.m.job(self.job, ignore=True, block='test')
+        self.assertEqual(self.m.get_block('test')[0], self.job_quiet_ignore)
+
+    def test_job_ignored_positional(self):
+        self.m.job(self.job, False, True, block='test')
+        self.assertEqual(self.m.get_block('test')[0], self.job_quiet_ignore)
+
+    def test_job_unquiet_named(self):
+        self.m.job(self.job, display=True, block='test')
+        self.assertEqual(self.m.get_block('test')[0], self.job_make)
+
+    def test_job_unquiet_positional(self):
+        self.m.job(self.job, True, block='test')
+        self.assertEqual(self.m.get_block('test')[0], self.job_make)
+
+    def test_job_unquiet_ignored_positional(self):
+        self.m.job(self.job, True, True, block='test')
+        self.assertEqual(self.m.get_block('test')[0], self.job_ignore)
+
+    def test_job_unquiet_ignored_named(self):
+        self.m.job(self.job, display=True, ignore=True, block='test')
+        self.assertEqual(self.m.get_block('test')[0], self.job_ignore)
 
 class TestMakefileBuilderVariableMethods(TestCase):
     @classmethod
