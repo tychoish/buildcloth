@@ -14,15 +14,21 @@
 #
 # Author: Sam Kleinman (tychoish)
 
+import os.path
+import os
+
 def print_output(list):
     for line in list:
         print(line)
 
 def write_file(list, filename):
+    dirpath = filename.rsplit('/', 1)[0]
+    if os.path.isdir(dirpath) is False:
+        os.mkdir(dirpath)
+
     with open(filename, 'w') as f:
         for line in list:
             f.write(line + '\n')
-
 
 class BuildFileError(Exception):
     def __init__(self, msg=None):
@@ -92,6 +98,7 @@ class BuildFile(object):
             output.append(self.builder[block])
 
         output = [item for sublist in output for item in sublist]
+        
         write_file(output, filename)
 
     def write_block(self, filename, block='_all'):
