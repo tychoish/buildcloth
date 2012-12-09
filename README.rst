@@ -1,0 +1,304 @@
+==========================
+Buildfile Generator README
+==========================
+
+Overview
+--------
+
+Introduction
+~~~~~~~~~~~~
+
+Buildfile Generator is a simple lightweight interface to generate
+Makefiles by writing Python code. Buildfile doesn't have any specific
+"knowledge" of how to process any specific input or output file. build
+any specific kind of file, and is generic with regards to the kinds of
+build processes it is applicable.  From a high level, exists
+to make: potentially complex or repetitive build systems more
+manageable, maintainable, and clear than would be otherwise possible
+using native Make syntax, with more flexibility than you would have
+with a Make-replacement. 
+
+Buildfile requires *some* knowledge of the underlying Make syntax and
+the operation of Make process. The output of build-file are human
+readable and modifiable, for testing. Using Buildfile *does not* mean
+that all build system development and enhancement will happen in
+Python rather than Makefiles. Rather that you can use Buildfile
+generated Makefiles to ensure consistency and to allow your Make-based
+build system to achieve a greater level of conceptual scale.
+
+Implementation
+~~~~~~~~~~~~~~
+
+Buildfile is a Python module called ``buildergen`` that consists of
+two classes: ``MakefileBuilder``, which implements the primary
+interface for constructing Makefiles, and its super-class ``BuildFile``
+which provides some of the underlying rendering and output options.
+
+Typically used in "embeded" mode, you will generate a single Python
+file that you can include with your project and import into Python
+scripts files as needed. This will reduce build time dependencies and,
+ensure build system stability. You can also install the Buildfile
+Generator as the Python module ``buildergen``, and use as a
+conventional Python module.
+
+
+Use
+---
+
+Operations and Integration
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This section describes Buildfile from an operational implementation
+perspective and outlines how you can begin to work with generated
+makefiles in a new or existing Make-based build system. The following
+section will introduce the syntax and interface of the
+``MakefileBuilder`` class.
+
+Checkout the git repository: ::
+  
+   git clone git://github.com/tychoish/buildfile-generator.git 
+   
+Build the ``embeded`` target: :: 
+
+   make embeded
+   
+``embeded`` is a meta-target that combines all portions of the python
+module and creates a ``makefile_generator.py`` file that you can
+include in your project tree and import into the python script or
+script that generates your Makefiles.
+
+In your Makefile, include the following lines: ::
+  
+   PYTHONBIN = /usr/bin/python 
+   output = build
+   build-scripts = bin
+
+   -include $(output)/makefile.sphinx-migration
+
+   makefile-deps += $(build-scripts)/makefile_builder.py 
+   makefile-deps += $(build-scripts)/builder_data.py
+
+   $(output)/makefile.%:$(build-scripts)/makegen/%.py $(makefile-deps)
+           @$(PYTHONBIN) $(build-scripts)/makegen/$(subst .,,$(suffix $@)).py $@
+
+This example sacrifices brevity for explicit clarity. You may choose
+to iterate on this form for your own use. Line-by-line considerations:
+
+- Change ``PYTHONPATH`` to the most relevant Python binary. Buildfile
+  supports: Python 2, Python 3, and PyPy. 
+  
+- The ``output`` variable should point to the main location that your
+  build process writes output. You should store your generated
+  makefiles in this location. If your build process does not store
+  files in a ``build/`` directory, or similar, ensure that these files
+  are not tracked by your version control system. 
+  
+  Similarly, ``build-scripts`` should hold the path for all
+  build-related scripts and programs that *are* tracked with version
+  control.
+
+- The ``include`` statement includes the generated Makefile. The
+  prefix-hyphen tells Make to *ignore* errors with this line, with the
+  effect that: Make will look for a build target that can regenerate
+  the included file and will use that to create the generated file.
+  
+- The ``makefile-deps`` variable lists dependencies of the generated
+  Makefile. In addition to the Python script that specifies the
+  Makefile itself (the obvious and primary dependency,) your build
+  system should re-generate Makefiles if the ``makefile_builder.py``
+  file changes. 
+  
+  In my systems, I also have a ``builder_data.py`` file that only
+  holds data about builders, in an attempt to separate the form and
+  logic of the build process from the primary maintenance location. In
+  practice, however, the abstraction is slightly leaky.
+  
+- The last component is the target for building the generated
+  Makefiles. *For a generated makefile named* ``linking``: 
+  
+  - The generated makefile ``build/makefile.linking`` depends on a
+    the file ``bin/makegen/linking.py``, in addition to the
+    dependencies specified in ``makefile-deps``. 
+      
+    The ``%`` are matches and allow you to specify a single make rule
+    for a group of files with similar names and build rules.
+    
+  - To rebuild this file, invoke: ::
+
+      python bin/makegen/linking.py build/makefile.linking
+
+    There's a bunch of quirky/abstruse Make operation here, but it's
+    reliable, and it allows you to add new generated makefiles by
+    *only* adding a single ``include`` line.
+
+That's it. Insert these lines, or some reasonable variant therein, in
+your new or existing Make-based build system and you're read to begin
+writing python scripts to generate your make files. 
+
+Programming and Interface
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This section introduces the syntax and use of the Python scripts that
+describe Makefile using the ``MakefileBuilder`` class. 
+
+Consider the following trivial example: :: 
+
+   from makefile_builder import MakefileBuilder
+   m = MakefileBuilder()
+
+   m.section_break('a test makefile')
+
+   m.target('touch')
+   m.job('touch test-file')
+   m.msg('[test]: touched the $@ file')
+
+   m.print_content()
+   
+This will output make content that resembles the following:: 
+
+   ########## a test makefile ##########
+
+   touch:
+        @touch test-file
+        @echo [test]: touched the $@ file.
+
+To output this to the ``makefile.touch`` file, you would replace
+``m.print_content()`` with: ::
+
+   m.write('makefile.touch')
+
+Which would output the above to the ``makefile.touch`` file, or
+overwrite ``makefile.touch`` if it exists. Important additional
+concepts: 
+
+- ``MakefileBuilder`` objects have the internal concept of *blocks*
+  these allow you to control the order and structure of a Makefile
+  apart from the order of specification of lines to the object. Blocks
+  also allow you to use more than one ``MakefileBuilder`` object to
+  specify a single Makefile.
+  
+  Specify the block for a Make line, by appending the ``block`` named
+  argument to any specification ``MakefileBuilder``
+  method. Personallylly, the block argument is always the final
+  argument.
+
+  All specified Make lines are also *always* appended to an ``_all``
+  block. If you do not specify blocks in input or output, methods will
+  default to the ``_all`` block.
+
+  Use the ``get_block(<blockName>)`` method on a ``MakefileBuilder``
+  object to return the specified block name, as a list. You can also
+  use ``write_block(<filename>, <blockName>)`` to write the content of
+  a single block to a file
+
+  ``print_content()`` and ``write()`` accept a ``block_order``
+  argument that takes a list of block names and outputs the blocks in
+  the specified order.
+
+- When creating a ``MakefileBuilder`` object, you can pass a list to
+  the object to "pre-populate" the object, in the ``_all`` block, with
+  buildfile rules. 
+  
+  Use this feature cautiously, Buildfile does very little validation
+  of this input. 
+
+- By default make job lines echo the job to the shell when they
+  run. The ``job()`` method suppresses this behavior. You can specify
+  ``display=True`` to override this behavior. Similarly you can
+  specify ``ignore=True`` to force Make to ignore any errors returned
+  by this job.
+  
+  Ideally you will combine these silenced ``job()`` lines with
+  ``message()`` (aliased as ``msg()``) lines to ensure that output of
+  the build process remains responsive and clear.
+  
+``MakefileBuilder`` objects have the following methods for specifying
+makefiles:   
+  
+- ``block()`` - Creates a block, with the specified name if it doesn't
+  already exist that begins with a section break that names the
+  block. If the block exists, this operation does nothing.
+
+- ``section_break()`` - Creates a comment prefixed and suffixed by 10
+  octothorpe characters.
+
+- ``comment()`` - Creates a comment prefixed by a single octothorpe
+  characters. 
+
+- ``newline()`` - Inserts a newline character. Optionally, specify a
+  larger integer to insert more newlines. 
+
+- ``target()`` - Creates a Makefile target. Takes a ``target`` and
+  ``dependency`` argument. By default the dependency is ``None``. 
+
+- ``var()`` - Specifies a Makefile variable, Takes a ``variable`` and
+  value`` argument.
+
+- ``append_var()`` - Specifies an appended Makefile variable
+  (i.e. using ``+=`` rather than ``=`` for variable assignment.)
+
+- ``job()`` - Specifies a Makefile shell line. The first arguemnt is
+  the shell command. If you specify ``display=True`` (``False`` by
+  default,) Make will echo the line before running the command. If you
+  specify ``ignore=True`` (``False`` by default,) Make will continue
+  building despite non-0 return statuses from this job. 
+
+  ``job()`` does not validate that it exist in a *target* block. 
+
+- ``message()`` (aliased as ``msg()``) - Adds a *job* line that begins
+  with ``echo``, to provide user feedback for shell lines. Does not
+  validate that it follows a *job* specification, or that it
+  exists in a *target* block.
+
+- ``raw()`` (internal/lowlevel) - Takes a list as an argument and adds
+  those list items to the makefile. Will raise an exception if you
+  attempt to add an item that is not a list, or a list that holds
+  nested lists. 
+
+``BuildFile`` the base class of ``MakefileBuilder`` provides the
+following methods: 
+
+- ``get_block()`` - Returns the content of the specified block.
+
+- ``print_content()`` Prints all lines of the ``_all`` block, by
+  default, or the content of the list specified to the
+  ``block_order`` argument.
+
+- ``print_block()`` - Prints the content of the specified block. 
+
+- ``write()`` - Writes all lines of the ``_all`` block , by default,
+  or the content of the list specified to the ``block_order`` argument.
+
+- ``write_block()`` Writes the content of the specified block.
+
+Development
+-----------
+
+.. note:: 
+
+   Buildfile generator is available for use and continued development
+   under the terms of the Apache 2.0 License.
+
+The core ``buildergen`` Python module was developed by the
+documentation team at 10gen for use in the MongoDB Documentation
+projects. It's design and operation was inspired by
+``ninja_syntax.py``, for the ninja build tool.
+
+Currently, Buildfile is generally stable and ready for production
+use. It currently generates the majority of the Makefiles for the
+`MongoDB Documentation <http://github.com/mongodb/docs/>`_ project,
+and a number of other projects.
+
+In the future similar interfaces for other build systems, like
+``ninja`` may be prove useful. Also, more complete support for major
+Makefile constructs may be useful, including: 
+
+- differentiation and support for between simply expanded and
+  recursively expanded variables.
+
+- some limited support for conditional declarations.
+
+- ``define`` statements.
+
+- possible support for shell functions and some other basic processing
+  of strings before adding them to makefile blocks.
