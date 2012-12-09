@@ -82,24 +82,35 @@ class BuildFile(object):
     def print_content(self, block_order=['_all']):
         output = []
 
-        for block in block_order:
-            output.append(self.builder[block])
+        if type(block_order) is not list:
+            raise BuildFileError('Cannot print blocks not specified as a list.')
+        else:
+            for block in block_order:
+                output.append(self.builder[block])
 
-        output = [item for sublist in output for item in sublist]
-        print_output(output)
+            output = [item for sublist in output for item in sublist]
+            print_output(output)
 
-    def print_block(self, block='all'):
-        print_output(self.builder[block])
+    def print_block(self, block='_all'):
+        if block not in self.builder:
+            raise BuildFileError('Error: ' + block + ' not specified in buildfile')
+        else:
+            print_output(self.builder[block])
 
     def write(self, filename, block_order=['_all']):
         output = []
 
-        for block in block_order:
-            output.append(self.builder[block])
+        if type(block_order) is not list:
+            raise BuildFileError('Cannot write blocks not specified as a list.')
+        else:
+            for block in block_order:
+                output.append(self.builder[block])
 
-        output = [item for sublist in output for item in sublist]
-        
-        write_file(output, filename)
+            output = [item for sublist in output for item in sublist]
+            write_file(output, filename)
 
     def write_block(self, filename, block='_all'):
-        write_file(self.builder[block], filename)
+        if block not in self.builder:
+            raise BuildFileError('Error: ' + block + ' not specified in buildfile')
+        else:
+            write_file(self.builder[block], filename)

@@ -15,6 +15,10 @@
 # Author: Sam Kleinman (tychoish)
 
 from buildergen.buildfile import BuildFile
+from buildergen.buildfile import BuildFileError
+
+class MakefileError(BuildFileError):
+    pass
 
 class MakefileBuilder(BuildFile):
     def __init__(self, makefile=None):
@@ -26,13 +30,22 @@ class MakefileBuilder(BuildFile):
 
     def block(self, block):
         if block in self.builder:
-            pass
+            raise MakefileError('Cannot add "' + block + '" to Makefile. ' + block + ' already exists.')
         else:
             self.builder[block] = []
             self.section_break(block, block)
 
     def raw(self, lines, block='_all'):
-        self._add_to_builder(lines, block)
+        if type(lines) is list:
+            o = []
+            for line in lines:
+                if type(line) is list:
+                    raise MakefileError('Cannot add nested lists to a Makefile with raw().')
+                else:
+                    o.append(line)
+            self._add_to_builder(o, block)
+        else:
+            raise MakefileError('Cannot add non-list raw() content to Makefile.')
 
     # The following methods constitute the 'public' interface for
     # building makefile.
@@ -45,7 +58,7 @@ class MakefileBuilder(BuildFile):
 
     def newline(self, n=1, block='_all'):
         for i in range(n):
-            self._add_to_builder('\n', block)
+            self._add_to_builder('', block)
 
     def target(self, target, dependency=None, block='_all'):
         if dependency is None:
@@ -61,9 +74,9 @@ class MakefileBuilder(BuildFile):
 
     def job(self, job, display=False, ignore=False, block='_all'):
         o = '\t'
-        if display is False: 
+        if display is False:
             o += '@'
-        if ignore is True: 
+        if ignore is True:
             o += '-'
         o += job
 
