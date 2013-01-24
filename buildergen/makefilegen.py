@@ -43,10 +43,9 @@ class MakefileBuilder(BuildFile):
                     raise MakefileError('Cannot add nested lists to a Makefile with raw().')
                 else:
                     o.append(line)
-            self._add_to_builder(o, block)
+            self._add_to_builder(data=o, block=block, raw=True)
         else:
             raise MakefileError('Cannot add non-list raw() content to Makefile.')
-
     # The following methods constitute the 'public' interface for
     # building makefile.
 
