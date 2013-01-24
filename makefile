@@ -21,6 +21,6 @@ $(output)/:
 	@echo [build]: created $@
 
 $(output)/makefile_builder.py:$(output)/ $(modsrc)/buildfile.py $(modsrc)/makefilegen.py bin/build_embeded.py
-	@$(PYTHONBIN) bin/build_embeded.py $@
+	@$(PYTHONBIN) bin/build_embedded.py $@
 	@echo [build]: created $@
 embedded:$(output)/makefile_builder.py

@@ -9,7 +9,7 @@ def content():
         o.append(f.read())
 
     with open('buildergen/makefilegen.py', 'r') as f:
-        for lines in f.readlines()[17:]:
+        for lines in f.readlines()[18:]:
             o.append(lines.rstrip())
         
     return o

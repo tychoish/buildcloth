@@ -12,11 +12,11 @@ Buildfile Generator is a simple lightweight interface to generate
 Makefiles by writing Python code. Buildfile doesn't have any specific
 "knowledge" of how to process any specific input or output file. build
 any specific kind of file, and is generic with regards to the kinds of
-build processes it is applicable.  From a high level, exists
-to make: potentially complex or repetitive build systems more
-manageable, maintainable, and clear than would be otherwise possible
-using native Make syntax, with more flexibility than you would have
-with a Make-replacement. 
+build processes it is applicable.  From a high level, exists to make:
+potentially complex or repetitive build systems more manageable,
+maintainable, and clear than would be otherwise possible using native
+Make syntax, with more flexibility than you would have with a
+Make-replacement.
 
 Buildfile requires *some* knowledge of the underlying Make syntax and
 the operation of Make process. The output of build-file are human
