@@ -17,6 +17,32 @@
 from unittest import TestCase
 
 from buildergen import MakefileBuilder
+from buildergen.makefilegen import MakefileError
+
+class TestMakefileBuilderRawMethods(TestCase): 
+    @classmethod
+    def setUp(self):
+        self.m = MakefileBuilder()
+        self.content = ['the md5 is ab98a7b91094a4ebd9fc0e1a93e985d6']
+
+    def test_raw_list(self):
+        b = 'raw0'
+        self.m.raw(lines=self.content, block=b)
+       
+        self.assertEqual(self.content, self.m.get_block(b))
+
+    def test_raw_string(self):
+        b = 'raw1'
+
+        with self.assertRaises(MakefileError):
+            self.m.raw(lines=self.content[0], block=b)
+        
+    def test_raw_nested_list(self):
+        b = 'raw2'
+
+        with self.assertRaises(MakefileError):
+            self.m.raw(lines=[self.content, self.content], block=b)
+
 
 class TestMakefileBuilderCommentMethods(TestCase):
     @classmethod
@@ -45,7 +71,7 @@ class TestMakefileBuilderCommentMethods(TestCase):
         self.assertEqual(self.m.get_block('message1'), self.m.get_block('msg1'))
         self.assertEqual(self.m.get_block('msg1') + self.m.get_block('message1'), self.m.builder['_all'])
 
-class TestMakefileBUilderJobMethod(TestCase): 
+class TestMakefileBuilderJobMethod(TestCase):
     @classmethod
     def setUp(self):
         self.m = MakefileBuilder()
