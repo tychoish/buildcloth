@@ -15,3 +15,4 @@
 # Author: Sam Kleinman (tychoish)
 
 from buildergen.makefilegen import MakefileBuilder
+from buildergen.ninjagen import NinjaFileBuilder

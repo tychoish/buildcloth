@@ -20,7 +20,10 @@ $(output)/:
 	@mkdir $@
 	@echo [build]: created $@
 
-$(output)/makefile_builder.py:$(output)/ $(modsrc)/buildfile.py $(modsrc)/makefilegen.py bin/build_embedded.py
-	@$(PYTHONBIN) bin/build_embedded.py $@
+$(output)/makefile_builder.py:$(modsrc)/makefilegen.py $(output)/ $(modsrc)/buildfile.py bin/build_embedded.py
+	@$(PYTHONBIN) bin/build_embedded.py $@ $<
 	@echo [build]: created $@
-embedded:$(output)/makefile_builder.py
+$(output)/ninjafile_builder.py:$(modsrc)/ninjagen.py $(output)/ $(modsrc)/buildfile.py bin/build_embedded.py
+	@$(PYTHONBIN) bin/build_embedded.py $@ $<
+	@echo [build]: created $@
+embedded:$(output)/makefile_builder.py $(output)/ninjafile_builder.py

@@ -75,27 +75,7 @@ class BuildFile(object):
         if raw is True:
             for line in data:
                 add(line, block)
-        elif type(data) is not str and raw is True:
-            raise BuildFileError('Added malformed data to BuildFile.')
-        else:
-            add(data, block)
-
-    def _add_to_builder(self, data, block, raw=False):
-        def add(data, block):
-            if block is '_all':
-                pass
-            else:
-                self.buildfile.append(data)
-
-            if block in self.builder:
-                self.builder[block].append(data)
-            else:
-                self.builder[block] = [data]
-
-        if raw is True:
-            for line in data:
-                add(line, block)
-        elif type(data) is not str:
+        elif type(data) is not str or raw is True:
             raise BuildFileError('Added malformed data to BuildFile.')
         else:
             add(data, block)
