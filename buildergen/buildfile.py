@@ -36,7 +36,7 @@ class BuildFileError(Exception):
 
     def __str__(self):
         if self.msg is None:
-            return "Error in handling BuildFile."
+            return "Error in consstructing BuildFile."
         else:
             return "Error: " + self.msg
 
@@ -56,6 +56,45 @@ class BuildFile(object):
                     self.builder['_all'].append(line)
         else:
             raise BuildFileError('Instantiated BuildFile object with malformed argument.')
+
+    # The following two methods allow more direct interaction with the
+    # internal representation of the buildfile.
+
+    def block(self, block):
+        if block in self.builder:
+            raise NinjaFileError('Cannot add "%s" to ninja.build. %s already exists.' 
+                                 % (block, block))
+        else:
+            self.builder[block] = []
+            self.section_break(block, block)
+
+    def raw(self, lines, block='_all'):
+        if type(lines) is list:
+            o = []
+            for line in lines:
+                if type(line) is list:
+                    raise BuildFileError('Cannot add nested lists with raw().')
+                else:
+                    o.append(line)
+            self._add_to_builder(data=o, block=block, raw=True)
+        else:
+            raise BuildFileError('Cannot add non-list raw() content.')
+
+    # Basic commenting and other formatting niceties that are not builder
+    # specific but are generally userfacing.
+
+    def section_break(self, name, block='_all'):
+        self._add_to_builder('\n\n########## ' + name + ' ##########', block)
+
+    def comment(self, comment, block='_all'):
+        self._add_to_builder('\n# ' + comment, block)
+
+    def newline(self, n=1, block='_all'):
+        for i in range(n):
+            self._add_to_builder('', block)
+
+    def var(self, variable, value, block='_all'):
+        self._add_to_builder(variable + ' = ' + value, block)
 
     # the following method is used internally to constrcd uct and
     # maintain the internal representation of the buildfile.

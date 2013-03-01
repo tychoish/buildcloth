@@ -1,0 +1,3 @@
+build /path/to/newark: testrule dep0 dep1 | implicit pun || order0 order1
+  dog = spot
+  cat = merlin

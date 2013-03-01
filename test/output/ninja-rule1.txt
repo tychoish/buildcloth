@@ -1,0 +1,3 @@
+rule ruletest
+  command = cat /proc/cpuinfo
+  description = RULETEST return info about the cpu

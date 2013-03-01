@@ -18,33 +18,8 @@ from unittest import TestCase
 
 from buildergen import MakefileBuilder
 from buildergen.makefilegen import MakefileError
-
-class TestMakefileBuilderRawMethods(TestCase): 
-    @classmethod
-    def setUp(self):
-        self.m = MakefileBuilder()
-        self.content = ['the md5 is ab98a7b91094a4ebd9fc0e1a93e985d6']
-
-    def test_raw_list(self):
-        b = 'raw0'
-        self.m.raw(lines=self.content, block=b)
-       
-        self.assertEqual(self.content, self.m.get_block(b))
-
-    def test_raw_string(self):
-        b = 'raw1'
-
-        with self.assertRaises(MakefileError):
-            self.m.raw(lines=self.content[0], block=b)
         
-    def test_raw_nested_list(self):
-        b = 'raw2'
-
-        with self.assertRaises(MakefileError):
-            self.m.raw(lines=[self.content, self.content], block=b)
-
-
-class TestMakefileBuilderCommentMethods(TestCase):
+class TestMakefileBuilderMessageMethods(TestCase):
     @classmethod
     def setUp(self):
         self.m = MakefileBuilder()
@@ -117,27 +92,6 @@ class TestMakefileBuilderVariableMethods(TestCase):
         self.value0 = '$(makepathvar)/build/$(branch)/'
         self.value1 = '$(makepathvar)/archive/$(branch)/'
         self.value2 = 'bin lib opt srv local usr src'
-
-    def test_var_meth1(self):
-        b = 'var1'
-        v = self.value1
-
-        self.m.var(self.variable, v, block=b)
-        self.assertEqual(self.m.get_block(b)[0], self.variable + ' = ' + v)
-
-    def test_var_meth2(self):
-        b = 'var2'
-        v = self.value2
-
-        self.m.var(self.variable, v, block=b)
-        self.assertEqual(self.m.get_block(b)[0], self.variable + ' = ' + v)
-
-    def test_var_meth3(self):
-        b = 'var3'
-        v = self.value2
-
-        self.m.var(self.variable, v, block=b)
-        self.assertEqual(self.m.get_block(b)[0], self.variable + ' = ' + v)
 
     def test_append_var_meth1(self):
         b = 'append_var1'

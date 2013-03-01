@@ -21,96 +21,69 @@ class NinjaFileError(BuildFileError):
     pass
 
 class NinjaFileBuilder(BuildFile):
-    def __init__(self, ninjafile=None):
+    def __init__(self, ninjafile=None, indent=2):
         super(NinjaFileBuilder, self).__init__(ninjafile)
         self.ninja = self.buildfile
-
-    # The following two methods allow more direct interaction with the
-    # internal representation of the makefile than the other methods.
-
-    def block(self, block):
-        if block in self.builder:
-            raise NinjaFileError('Cannot add "' + block + '" to ninja.build. ' + block + ' already exists.')
-        else:
-            self.builder[block] = []
-            self.section_break(block, block)
-
-    def raw(self, lines, block='_all'):
-        if type(lines) is list:
-            o = []
-            for line in lines:
-                if type(line) is list:
-                    raise NinjaFileError('Cannot add nested lists to a Makefile with raw().')
-                else:
-                    o.append(line)
-            self._add_to_builder(data=o, block=block, raw=True)
-        else:
-            raise NinjaFileError('Cannot add non-list raw() content to ninja.build.')
+        self.indent = ' ' * indent 
 
     # The following methods constitute the 'public' interface for
     # building makefile.
 
-    def section_break(self, name, block='_all'):
-        self._add_to_builder('\n\n########## ' + name + ' ##########', block)
-
-    def comment(self, comment, block='_all'):
-        self._add_to_builder('\n# ' + comment, block)
-
-    def newline(self, n=1, block='_all'):
-        for i in range(n):
-            self._add_to_builder('', block)
-
-    def var(self, variable, value, block='_all'):
-        self._add_to_builder(variable + ' = ' + value, block)
-
     def rule(self, name, rule_dict, block='_all'):
-        for i in rule_dict['command']:
-            cmd += i + '; ' 
+        if type(rule_dict['command']) is str:
+            raise BuildFileError('ERROR: ' + rule_dict['command'] + ' is not a list.')
+        elif len(rule_dict['command']) == 1:
+            cmd = rule_dict['command'][0]
+        else:     
+            cmd = ''
+            for i in rule_dict['command']:
+                cmd += i + '; ' 
 
-        if depfile in rule_dict:
+        if 'depfile' in rule_dict:
             depf = rule_dict['depfile']
         else:
             depf = None
             
-        if generator in rule_dict:
+        if 'generator' in rule_dict:
             gen = rule_dict['generator']
         else:
             gen = None
             
-        if restat in rule_dict:
+        if 'restat' in rule_dict:
             rstat = rule_dict['restat']
         else:
-            rstat = None
+            rstat = False
         
-        if rspfile in rule_dict and rspfile_content in rule_dict:
+        if 'rspfile' in rule_dict and 'rspfile_content' in rule_dict:
             rsp = ( rule_dict['rspfile'], rule_dict['rspfile_content'] )
         else:
             rsp = None
 
-        self._rule( name=name, 
-                    command=cmd,
-                    description=rule_dict['description'],
-                    depfile=depf,
-                    generator=gen, 
-                    restat=rstat,
-                    rsp=()
-                    )
+        self.add_rule( name=name, 
+                       command=cmd,
+                       description=rule_dict['description'],
+                       depfile=depf,
+                       generator=gen, 
+                       restat=rstat,
+                       rsp=rsp,
+                       block=block
+                     )
 
-    def _rule(self, name, command, description, 
+    def add_rule(self, name, command, description, 
               depfile=None, generator=None, restat=False, rsp=None, block='_all'):
         o = [ 'rule ' + name ]
-        o.append('  command = ' + command)
-        o.append('  description = ' + name.upper() + ' ' + description)
+        o.append(self.indent + 'command = ' + command)
+        o.append(self.indent + 'description = ' + name.upper() + ' ' + description)
 
         if depfile is not None:
-            o.append('  depfile = ' + depfile)
-        if generatior is not None:
-            o.append('  generator = True')
+            o.append(self.indent + 'depfile = ' + depfile)
+        if generator is not None:
+            o.append(self.indent + 'generator = True')
         if restat is not False:
-            o.append('  restat = True')
+            o.append(self.indent + 'restat = True')
         if rsp is not None:
-            o.append('  rspfile = ' + rsp[0])
-            o.append('  rspfile_content = ' + rsp[1])
+            o.append(self.indent + 'rspfile = ' + rsp[0])
+            o.append(self.indent + 'rspfile_content = ' + rsp[1])
 
         self._add_to_builder(data=o, block=block, raw=True)
 
@@ -119,7 +92,7 @@ class NinjaFileBuilder(BuildFile):
 
         o = [ 'build %s: %s' % ( path, rule ) ]
         for d in dep:
-            o[0] += d + ' '
+            o[0] += ' ' + d
 
         if implicit:
             o[0] += ' |'
@@ -127,15 +100,15 @@ class NinjaFileBuilder(BuildFile):
                 o[0] += ' ' + dep
 
         if order_only:
-            o[0] += ' |'
+            o[0] += ' ||'
             for dep in order_only:
                 o[0] += ' ' + dep
 
         if vars: 
-            for var in items(vars):
-                o.append('  %s = %s' % ( var[0], var[1] ) )
+            for var in vars.items():
+                o.append('%s%s = %s' % ( self.indent, var[0], var[1] ) )
 
-        self.add_to_builder(data=o, block=block, raw=True)
+        self._add_to_builder(data=o, block=block, raw=True)
 
     def default(self, rule, block='_all'):
-        self.add_to_builder('default ' + rule, block)
+        self._add_to_builder('default ' + rule, block)

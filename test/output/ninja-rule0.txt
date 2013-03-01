@@ -1,0 +1,8 @@
+rule ruletest
+  command = cat /proc/cpuinfo
+  description = RULETEST return info about the cpu
+  depfile = ruletest.d
+  generator = True
+  restat = True
+  rspfile = ruletest.rsp
+  rspfile_content = rspfile-file-content-content

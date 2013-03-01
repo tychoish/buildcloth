@@ -25,48 +25,14 @@ class MakefileBuilder(BuildFile):
         super(MakefileBuilder, self).__init__(makefile)
         self.makefile = self.buildfile
 
-    # The following two methods allow more direct interaction with the
-    # internal representation of the makefile than the other methods.
-
-    def block(self, block):
-        if block in self.builder:
-            raise MakefileError('Cannot add "' + block + '" to Makefile. ' + block + ' already exists.')
-        else:
-            self.builder[block] = []
-            self.section_break(block, block)
-
-    def raw(self, lines, block='_all'):
-        if type(lines) is list:
-            o = []
-            for line in lines:
-                if type(line) is list:
-                    raise MakefileError('Cannot add nested lists to a Makefile with raw().')
-                else:
-                    o.append(line)
-            self._add_to_builder(data=o, block=block, raw=True)
-        else:
-            raise MakefileError('Cannot add non-list raw() content to Makefile.')
     # The following methods constitute the 'public' interface for
     # building makefile.
-
-    def section_break(self, name, block='_all'):
-        self._add_to_builder('\n\n########## ' + name + ' ##########', block)
-
-    def comment(self, comment, block='_all'):
-        self._add_to_builder('\n# ' + comment, block)
-
-    def newline(self, n=1, block='_all'):
-        for i in range(n):
-            self._add_to_builder('', block)
 
     def target(self, target, dependency=None, block='_all'):
         if dependency is None:
             self._add_to_builder(target + ':', block)
         else:
             self._add_to_builder(target + ':' + dependency, block)
-
-    def var(self, variable, value, block='_all'):
-        self._add_to_builder(variable + ' = ' + value, block)
 
     def append_var(self, variable, value, block='_all'):
         self._add_to_builder(variable + ' += ' + value, block)
