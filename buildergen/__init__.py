@@ -16,3 +16,4 @@
 
 from buildergen.makefilegen import MakefileBuilder
 from buildergen.ninjagen import NinjaFileBuilder
+from buildergen.rules import Rule, BuildRules

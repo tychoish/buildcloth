@@ -16,6 +16,8 @@ from unittest import TestCase
 from buildergen.ninjagen import NinjaFileBuilder
 from buildergen.buildfile import BuildFileError
 
+from collections import OrderedDict
+
 def munge_lines(line_list):
     i = 0
     for line in line_list:
@@ -204,7 +206,7 @@ class TestNinjaBuildMethod(TestCase):
         self.path = '/path/to/newark'
         self.rule = 'testrule'
         self.dep = [ 'dep0', 'dep1']
-        self.vars = { 'dog': 'spot', 'cat': 'merlin'}
+        self.vars = OrderedDict([('dog', 'spot'), ('cat', 'merlin')])
         self.order = [ 'order0', 'order1']
         self.implicit = [ 'implicit', 'pun']
 

@@ -58,7 +58,7 @@ class NinjaFileBuilder(BuildFile):
             rsp = ( rule_dict['rspfile'], rule_dict['rspfile_content'] )
         else:
             rsp = None
-
+            
         self.add_rule( name=name, 
                        command=cmd,
                        description=rule_dict['description'],
