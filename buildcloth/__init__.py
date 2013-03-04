@@ -14,6 +14,6 @@
 #
 # Author: Sam Kleinman (tychoish)
 
-from buildergen.makefilegen import MakefileBuilder
-from buildergen.ninjagen import NinjaFileBuilder
-from buildergen.rules import Rule, BuildRules
+from buildcloth.makefile import MakefileCloth
+from buildcloth.ninja import NinjaFileCloth
+from buildcloth.rules import Rule, RuleCloth

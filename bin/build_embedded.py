@@ -5,13 +5,15 @@ import argparse
 def content(input):
     o = ['#!/usr/bin/python\n']
 
-    with open('buildergen/buildfile.py', 'r') as f: 
+    with open('buildcloth/cloth.py', 'r') as f: 
         o.append(f.read())
 
     with open(input, 'r') as f:
         for lines in f.readlines()[18:]:
             o.append(lines.rstrip())
         
+
+            
     return o
 
 def main():

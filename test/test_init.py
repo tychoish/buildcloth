@@ -16,15 +16,14 @@
 
 from unittest import TestCase
 
-from buildergen import MakefileBuilder
-from buildergen.buildfile import BuildFileError
-from buildergen.buildfile import BuildFile
+from buildcloth import MakefileCloth
+from buildcloth.cloth import BuildClothError, BuildCloth
 
 class TestInitialMakefile(TestCase):
     @classmethod
     def setUp(self):
         self.argument = [1, 2, 3]
-        self.m = MakefileBuilder(self.argument)
+        self.m = MakefileCloth(self.argument)
 
     def test_list_arguments(self):
         self.assertEqual(self.m.makefile, self.argument)
@@ -36,11 +35,11 @@ class TestInitialMakefile(TestCase):
         self.assertEqual(self.m.makefile, self.m.buildfile)
 
 
-class TestInitialBuildFile(TestCase):
+class TestInitialBuildCloth(TestCase):
     @classmethod
     def setUp(self):
         self.argument = [1, 2, 3]
-        self.m = BuildFile(self.argument)
+        self.m = BuildCloth(self.argument)
 
     def test_list_arguments(self):
         self.assertEqual(self.m.buildfile, self.argument)
@@ -52,18 +51,18 @@ class TestBuildfile(TestCase):
     def test_nested_list_arguments(self):
         argument = [1, ['foo'], 3]
 
-        with self.assertRaises(BuildFileError):
-            m = MakefileBuilder(argument)
+        with self.assertRaises(BuildClothError):
+            m = MakefileCloth(argument)
 
     def test_empty_object(self):
-        m = MakefileBuilder()
+        m = MakefileCloth()
         self.assertEqual(m.makefile, [])
         self.assertEqual(m.builder['_all'], [])
 
-class TestBuildFileInterface(TestCase):
+class TestBuildClothInterface(TestCase):
     @classmethod
     def setUp(self):
-        self.b = BuildFile()
+        self.b = BuildCloth()
 
     def test_has_get_block(self):
         result = hasattr(self.b, 'get_block')
@@ -88,7 +87,7 @@ class TestBuildFileInterface(TestCase):
 class TestMakefileBuilderInterface(TestCase):
     @classmethod
     def setUp(self):
-        self.m = MakefileBuilder()
+        self.m = MakefileCloth()
 
     def test_has_block(self):
         result = hasattr(self.m, 'block')

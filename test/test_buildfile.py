@@ -16,13 +16,12 @@
 
 from unittest import TestCase
 
-from buildergen.buildfile import BuildFile
-from buildergen.buildfile import BuildFileError
+from buildcloth.cloth import BuildCloth, BuildClothError
 
 class TestBuilderRawMethods(TestCase): 
     @classmethod
     def setUp(self):
-        self.m = BuildFile()
+        self.m = BuildCloth()
         self.content = ['the md5 is ab98a7b91094a4ebd9fc0e1a93e985d6']
 
     def test_raw_list(self):
@@ -34,19 +33,19 @@ class TestBuilderRawMethods(TestCase):
     def test_raw_string(self):
         b = 'raw1'
 
-        with self.assertRaises(BuildFileError):
+        with self.assertRaises(BuildClothError):
             self.m.raw(lines=self.content[0], block=b)
         
     def test_raw_nested_list(self):
         b = 'raw2'
 
-        with self.assertRaises(BuildFileError):
+        with self.assertRaises(BuildClothError):
             self.m.raw(lines=[self.content, self.content], block=b)
 
 class TestBuildfileVariableMethods(TestCase):
     @classmethod
     def setUp(self):
-        self.m = BuildFile()
+        self.m = BuildCloth()
         self.variable = 'var'
         self.value0 = '$(makepathvar)/build/$(branch)/'
         self.value1 = '$(makepathvar)/archive/$(branch)/'
@@ -73,20 +72,20 @@ class TestBuildfileVariableMethods(TestCase):
         self.m.var(self.variable, v, block=b)
         self.assertEqual(self.m.get_block(b)[0], self.variable + ' = ' + v)
 
-class TestBuildFileBlocks(TestCase):
+class TestBuildClothBlocks(TestCase):
     @classmethod
     def setUp(self):
         self.block = 'ab98'
         self.block1 = '98ab'
-        self.b = BuildFile()
+        self.b = BuildCloth()
         self.content = 'the md5 is ab98a7b91094a4ebd9fc0e1a93e985d6'
 
     def test_add_list(self):
-        with self.assertRaises(BuildFileError):
+        with self.assertRaises(BuildClothError):
             self.b._add_to_builder([self.content, self.content], self.block)
 
     def test_add_dict(self):
-        with self.assertRaises(BuildFileError):
+        with self.assertRaises(BuildClothError):
             self.b._add_to_builder({ self.block: self.content }, self.block)
 
     def test_block_in_builder(self):

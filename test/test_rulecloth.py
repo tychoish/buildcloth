@@ -16,7 +16,7 @@
 
 from unittest import TestCase
 
-from buildergen import Rule, BuildRules
+from buildcloth.rules import Rule, RuleCloth
 
 class TestRule(TestCase):
     @classmethod
@@ -183,7 +183,7 @@ class TestRuleRestat(TestCase):
 class TestBuildRules(TestCase):
     @classmethod
     def setUp(self):
-        self.rdb = BuildRules()
+        self.rdb = RuleCloth()
         self.rule_name = 'ccompile'
         self.example_rule = { 'name': self.rule_name, 'description': 'compile $file', 'command': ['cc $in'] }
 

@@ -13,10 +13,10 @@
 # limitations under the License.
 
 from unittest import TestCase
-from buildergen.ninjagen import NinjaFileBuilder
-from buildergen.buildfile import BuildFileError
-
 from collections import OrderedDict
+
+from buildcloth.ninja import NinjaFileCloth
+from buildcloth.cloth import BuildClothError
 
 def munge_lines(line_list):
     i = 0
@@ -29,7 +29,7 @@ def munge_lines(line_list):
 class TestNinjaBuilderCommentMethods(TestCase):
     @classmethod
     def setUp(self):
-        self.n = NinjaFileBuilder()
+        self.n = NinjaFileCloth()
         self.variable = 'var'
         self.value1 = '/a/path/to/nowhere'
         self.value2 = 'bin lib opt srv local usr src'
@@ -58,7 +58,7 @@ class TestNinjaBuilderCommentMethods(TestCase):
 class TestNinjaBuilderRuleMethods(TestCase):
     @classmethod
     def setUp(self): 
-        self.n = NinjaFileBuilder(indent=2)
+        self.n = NinjaFileCloth(indent=2)
         self.name = 'ruletest'
         self.cmd = 'cat /proc/cpuinfo'
         self.description = 'return info about the cpu'
@@ -187,13 +187,13 @@ class TestNinjaBuilderRuleMethods(TestCase):
         self.assertEqual(t[1], cmd_line)
 
     def test_string_cmd(self):
-        with self.assertRaises(BuildFileError):
+        with self.assertRaises(BuildClothError):
             self.n.rule(self.name, { 'command': 'string' })
 
 class TestNinjaDefault(TestCase):
     @classmethod
     def setUp(self):
-        self.n = NinjaFileBuilder()
+        self.n = NinjaFileCloth()
 
     def test_default(self):
         self.n.default('testrule', block='d0')
@@ -202,7 +202,7 @@ class TestNinjaDefault(TestCase):
 class TestNinjaBuildMethod(TestCase):
     @classmethod
     def setUp(self):
-        self.n = NinjaFileBuilder()
+        self.n = NinjaFileCloth()
         self.path = '/path/to/newark'
         self.rule = 'testrule'
         self.dep = [ 'dep0', 'dep1']

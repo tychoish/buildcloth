@@ -16,13 +16,12 @@
 
 from unittest import TestCase
 
-from buildergen import MakefileBuilder
-from buildergen.makefilegen import MakefileError
+from buildcloth import MakefileCloth
         
 class TestMakefileBuilderMessageMethods(TestCase):
     @classmethod
     def setUp(self):
-        self.m = MakefileBuilder()
+        self.m = MakefileCloth()
         self.content = 'the md5 is ab98a7b91094a4ebd9fc0e1a93e985d6'
         self.output = ['\t@echo ' + self.content ]
 
@@ -49,7 +48,7 @@ class TestMakefileBuilderMessageMethods(TestCase):
 class TestMakefileBuilderJobMethod(TestCase):
     @classmethod
     def setUp(self):
-        self.m = MakefileBuilder()
+        self.m = MakefileCloth()
         self.job = 'git update-index --assume-unchanged'
         self.job_make = '\t' + self.job
         self.job_quiet = '\t@' + self.job
@@ -84,10 +83,10 @@ class TestMakefileBuilderJobMethod(TestCase):
         self.m.job(self.job, display=True, ignore=True, block='test')
         self.assertEqual(self.m.get_block('test')[0], self.job_ignore)
 
-class TestMakefileBuilderVariableMethods(TestCase):
+class TestMakefileClothVariableMethods(TestCase):
     @classmethod
     def setUp(self):
-        self.m = MakefileBuilder()
+        self.m = MakefileCloth()
         self.variable = 'var'
         self.value0 = '$(makepathvar)/build/$(branch)/'
         self.value1 = '$(makepathvar)/archive/$(branch)/'

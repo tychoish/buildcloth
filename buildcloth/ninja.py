@@ -14,15 +14,14 @@
 #
 # Author: Sam Kleinman (tychoish)
 
-from buildergen.buildfile import BuildFile
-from buildergen.buildfile import BuildFileError
+from buildcloth.cloth import BuildCloth, BuildClothError
 
-class NinjaFileError(BuildFileError):
+class NinjaClothError(BuildClothError):
     pass
 
-class NinjaFileBuilder(BuildFile):
+class NinjaFileCloth(BuildCloth):
     def __init__(self, ninjafile=None, indent=2):
-        super(NinjaFileBuilder, self).__init__(ninjafile)
+        super(NinjaFileCloth, self).__init__(ninjafile)
         self.ninja = self.buildfile
         self.indent = ' ' * indent 
 
@@ -31,7 +30,7 @@ class NinjaFileBuilder(BuildFile):
 
     def rule(self, name, rule_dict, block='_all'):
         if type(rule_dict['command']) is str:
-            raise BuildFileError('ERROR: ' + rule_dict['command'] + ' is not a list.')
+            raise BuildClothError('ERROR: ' + rule_dict['command'] + ' is not a list.')
         elif len(rule_dict['command']) == 1:
             cmd = rule_dict['command'][0]
         else:     

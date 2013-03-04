@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from buildergen.makefilegen import MakefileBuilder
-from buildergen.ninjagen import NinjaFileBuilder
+from buildcloth.makefile import MakefileCloth
+from buildcloth.ninja import NinjaFileCloth
 
 class Rule(object):
     def __init__(self, name=None):
@@ -71,7 +71,7 @@ class Rule(object):
         else:
             return self._rule
 
-class BuildRules(object):
+class RuleCloth(object):
     def __init__(self, output=None):
         self.rules = {}
         self.output = None
@@ -101,7 +101,7 @@ class BuildRules(object):
     def _make(self, name, block='_all'):
         rule = self.rules[name]
 
-        m = MakefileBuilder()
+        m = MakefileCloth()
         
         for cmd in rule['command']:
             m.job(cmd, block=block)
@@ -117,7 +117,7 @@ class BuildRules(object):
         return m.get_block(block)
 
     def _ninja(self, name, indent=4, block='_all'):
-        n = NinjaFileBuilder(indent=indent)
+        n = NinjaFileCloth(indent=indent)
 
         n.rule(name, self.rules[name])
         return n.get_block(block)

@@ -14,15 +14,14 @@
 #
 # Author: Sam Kleinman (tychoish)
 
-from buildergen.buildfile import BuildFile
-from buildergen.buildfile import BuildFileError
+from buildcloth.cloth import BuildCloth, BuildClothError
 
-class MakefileError(BuildFileError):
+class MakefileError(BuildClothError):
     pass
 
-class MakefileBuilder(BuildFile):
+class MakefileCloth(BuildCloth):
     def __init__(self, makefile=None):
-        super(MakefileBuilder, self).__init__(makefile)
+        super(MakefileCloth, self).__init__(makefile)
         self.makefile = self.buildfile
 
     # The following methods constitute the 'public' interface for

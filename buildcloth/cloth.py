@@ -30,17 +30,17 @@ def write_file(list, filename):
         for line in list:
             f.write(line + '\n')
 
-class BuildFileError(Exception):
+class BuildClothError(Exception):
     def __init__(self, msg=None):
         self.msg = msg
 
     def __str__(self):
         if self.msg is None:
-            return "Error in consstructing BuildFile."
+            return "Error in consstructing BuildCloth."
         else:
             return "Error: " + self.msg
 
-class BuildFile(object):
+class BuildCloth(object):
     def __init__(self, buildfile=None):
         self.builder = { '_all' : [] }
         self.buildfile = self.builder['_all']
@@ -50,12 +50,12 @@ class BuildFile(object):
         elif type(buildfile) is list:
             for line in buildfile:
                 if type(line) is list:
-                    raise BuildFileError('Cannot instantiate BuildFile with nested list.')
+                    raise BuildClothError('Cannot instantiate BuildCloth with nested list.')
                     break
                 else:
                     self.builder['_all'].append(line)
         else:
-            raise BuildFileError('Instantiated BuildFile object with malformed argument.')
+            raise BuildClothError('Instantiated BuildCloth object with malformed argument.')
 
     # The following two methods allow more direct interaction with the
     # internal representation of the buildfile.
@@ -73,12 +73,12 @@ class BuildFile(object):
             o = []
             for line in lines:
                 if type(line) is list:
-                    raise BuildFileError('Cannot add nested lists with raw().')
+                    raise BuildClothError('Cannot add nested lists with raw().')
                 else:
                     o.append(line)
             self._add_to_builder(data=o, block=block, raw=True)
         else:
-            raise BuildFileError('Cannot add non-list raw() content.')
+            raise BuildClothError('Cannot add non-list raw() content.')
 
     # Basic commenting and other formatting niceties that are not builder
     # specific but are generally userfacing.
@@ -115,7 +115,7 @@ class BuildFile(object):
             for line in data:
                 add(line, block)
         elif type(data) is not str or raw is True:
-            raise BuildFileError('Added malformed data to BuildFile.')
+            raise BuildClothError('Added malformed data to BuildCloth.')
         else:
             add(data, block)
 
@@ -128,7 +128,7 @@ class BuildFile(object):
         output = []
 
         if type(block_order) is not list:
-            raise BuildFileError('Cannot print blocks not specified as a list.')
+            raise BuildClothError('Cannot print blocks not specified as a list.')
         else:
             for block in block_order:
                 output.append(self.builder[block])
@@ -138,7 +138,7 @@ class BuildFile(object):
 
     def print_block(self, block='_all'):
         if block not in self.builder:
-            raise BuildFileError('Error: ' + block + ' not specified in buildfile')
+            raise BuildClothError('Error: ' + block + ' not specified in buildfile')
         else:
             print_output(self.builder[block])
 
@@ -146,7 +146,7 @@ class BuildFile(object):
         output = []
 
         if type(block_order) is not list:
-            raise BuildFileError('Cannot write blocks not specified as a list.')
+            raise BuildClothError('Cannot write blocks not specified as a list.')
         else:
             for block in block_order:
                 output.append(self.builder[block])
@@ -156,6 +156,6 @@ class BuildFile(object):
 
     def write_block(self, filename, block='_all'):
         if block not in self.builder:
-            raise BuildFileError('Error: ' + block + ' not specified in buildfile')
+            raise BuildClothError('Error: ' + block + ' not specified in buildfile')
         else:
             write_file(self.builder[block], filename)
