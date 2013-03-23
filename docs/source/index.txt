@@ -1,0 +1,46 @@
+====================================
+Buildcloth, a Build System Generator
+====================================
+
+Buildcloth is a Python library for specifying and maintaining build
+system descriptions (e.g. :term:`Makefile` and :term:`ninja.build`
+files,) using to encode build logic and generation. Buil/'dcloth is
+great for projects that: 
+
+- want to encode the logic of build processes in Python rather than
+  in a build system's own syntax *but* don't want to implement a
+  custom build automation tool.
+
+- want to integrate components and data from Python applications or
+  other data sources without needing to maintain cumbersome and
+  redundant build scripts.
+
+- want to use familiar unit testing tools to ensure correctness for
+  build systems.
+
+- *and more...*
+
+Documents
+---------
+
+:doc:`API Documentation </api>`
+     Full documentation of the :mod:`dtf` and the examples in
+     :mod:`cases` that comprise ``dtf``.
+
+:doc:`/tutorial`
+     A basic tutorial that introduces installing ``dtf`` as well as
+     integrating ``dtf`` into your existing documentation workflow.
+
+.. toctree::
+   :hidden:
+
+   api
+   tutorial
+   glossary
+
+Buildcloth Project
+------------------
+
+- `Issue Tracker <https://issues.cyborginstitute.net/describecomponents.cgi?product=buildcloth>`_
+- `git repository <http://git.cyborginstitute.net/?p=buildcloth.git>`_
+- `github <http://github.com/tychoish/buildcloth/>`_

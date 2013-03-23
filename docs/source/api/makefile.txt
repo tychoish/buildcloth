@@ -1,0 +1,7 @@
+================================================
+``makefile`` -- Makefile Buildcloth Syntax Layer
+================================================
+
+.. automodule:: makefile
+   :members:
+   :private-members:

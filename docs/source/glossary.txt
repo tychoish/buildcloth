@@ -1,0 +1,15 @@
+========
+Glossary
+========
+
+.. glossary::
+   :sorted:
+   
+   Makefile
+      The default filneame for files that specify build targets and
+      procedures for ``make``-compatible (GNU make and others,) build
+      tools.
+   
+   ninja.build
+      The default filneame for files that describe ``ninja`` build
+      systems, include rules, dependencies, and build targets.

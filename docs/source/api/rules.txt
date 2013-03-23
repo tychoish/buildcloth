@@ -1,0 +1,7 @@
+===================================
+``Rules`` -- Build Rule Abstraction
+===================================
+
+.. automodule:: rules
+   :members:
+   :private-members:

@@ -1,0 +1,7 @@
+============================
+``err`` -- Common Exceptions
+============================
+
+.. automodule:: err
+   :members:
+   :private-members:

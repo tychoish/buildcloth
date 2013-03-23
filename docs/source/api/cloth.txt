@@ -1,0 +1,7 @@
+==================================
+``cloth`` -- Base Buildcloth Layer
+==================================
+
+.. automodule:: cloth
+   :members:
+   :private-members:

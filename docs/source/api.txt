@@ -1,0 +1,31 @@
+============================
+Buildcloth API Documentation
+============================
+
+Modules
+-------
+
+.. toctree::
+   :glob:
+   :maxdepth: 1
+
+   api/*
+
+Additional Resources
+--------------------
+
+To get the most out of Buildcloth, you should have a firm grasp of
+build automation in general and your build system's syntax, in
+particular. For more information consider: 
+
+- The `GNU Make Manual <http://www.gnu.org/software/make/manual/make.html>`_
+  
+- The `ninja documentation <http://martine.github.com/ninja/manual.html>`_
+
+Additional :doc:`buildcloth tutorial </tutorial>` provide a good
+introduction to basic buildcloth use.
+
+Buildcloth has no dependencies outside of the Python standard library
+and the build-dependency on `nose`_ for to run unit tests.
+
+.. _`nose`: https://nose.readthedocs.org/en/latest/

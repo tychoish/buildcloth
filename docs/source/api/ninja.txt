@@ -1,0 +1,7 @@
+==========================================
+``ninja`` -- Ninja Buildcloth Syntax Layer
+==========================================
+
+.. automodule:: ninja
+   :members:
+   :private-members:
