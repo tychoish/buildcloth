@@ -6,3 +6,4 @@
 build/*
 *.pyc
 makefile_builder.py
+docs/build/*
