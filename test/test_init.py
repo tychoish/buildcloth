@@ -17,8 +17,8 @@
 from unittest import TestCase
 
 from buildcloth import MakefileCloth
-from buildcloth.cloth import BuildClothError, BuildCloth
-
+from buildcloth.cloth import BuildCloth
+from buildcloth.err  import BuildClothError
 class TestInitialMakefile(TestCase):
     @classmethod
     def setUp(self):

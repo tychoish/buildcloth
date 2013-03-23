@@ -4,4 +4,4 @@
 
 .. automodule:: makefile
    :members:
-   :private-members:
+   :undoc-members:

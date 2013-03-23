@@ -16,7 +16,7 @@ from unittest import TestCase
 from collections import OrderedDict
 
 from buildcloth.ninja import NinjaFileCloth
-from buildcloth.cloth import BuildClothError
+from buildcloth.err import BuildClothError
 
 def munge_lines(line_list):
     i = 0
@@ -261,3 +261,36 @@ class TestNinjaBuildMethod(TestCase):
                      block='sanity3')
 
         self.assertEqual(self.n.get_block('sanity3'), self.n.get_block('sanity4'))
+
+class TestBuildfileVariableMethods(TestCase):
+    @classmethod
+    def setUp(self):
+        self.m = NinjaFileCloth()
+        self.variable = 'var'
+        self.value0 = '$makepathvarbuild/$branch/'
+        self.value1 = '$makepathvar/archive/$branch/'
+        self.value2 = 'bin lib opt srv local usr src'
+
+    def test_var_meth1(self):
+        b = 'var1'
+        v = self.value1
+
+        self.m.var(self.variable, v, block=b)
+        self.assertEqual(self.m.get_block(b)[0], self.variable + ' = ' + v)
+
+    def test_var_meth2(self):
+        b = 'var2'
+        v = self.value2
+
+        self.m.var(self.variable, v, block=b)
+        self.assertEqual(self.m.get_block(b)[0], self.variable + ' = ' + v)
+
+    def test_var_meth3(self):
+        b = 'var3'
+        v = self.value2
+
+        self.m.var(self.variable, v, block=b)
+        self.assertEqual(self.m.get_block(b)[0], self.variable + ' = ' + v)
+
+
+

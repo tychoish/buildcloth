@@ -13,3 +13,6 @@ Glossary
    ninja.build
       The default filneame for files that describe ``ninja`` build
       systems, include rules, dependencies, and build targets.
+
+   block
+      An internal structure in :class:`~cloth.BuildCloth()` that allows.

@@ -14,8 +14,8 @@
 #
 # Author: Sam Kleinman (tychoish)
 
-from buildcloth.cloth import BuildCloth, BuildClothError
-
+from buildcloth.cloth import BuildCloth
+from buildcloth.err import BuildClothError
 class NinjaClothError(BuildClothError):
     pass
 
@@ -26,7 +26,21 @@ class NinjaFileCloth(BuildCloth):
         self.indent = ' ' * indent 
 
     # The following methods constitute the 'public' interface for
-    # building makefile.
+    # building ninja.build files.
+
+    def var(self, variable, value, block='_all'):
+        """
+        :param string variable: The name of the variable.
+
+        :param string value: The value of the variable.
+
+        :param string block: Optional; defaults to ``_all``. Specify the name of
+                             the block in :attr:`~cloth.BuildCloth.builder`.
+
+        Adds a variable assignment to a build system block.
+        """
+
+        self._add_to_builder(variable + ' = ' + value, block)
 
     def rule(self, name, rule_dict, block='_all'):
         if type(rule_dict['command']) is str:

@@ -17,6 +17,7 @@
 from unittest import TestCase
 
 from buildcloth import MakefileCloth
+from buildcloth.err import MalformedContent
         
 class TestMakefileBuilderMessageMethods(TestCase):
     @classmethod
@@ -83,6 +84,118 @@ class TestMakefileBuilderJobMethod(TestCase):
         self.m.job(self.job, display=True, ignore=True, block='test')
         self.assertEqual(self.m.get_block('test')[0], self.job_ignore)
 
+    def test_job_invalid_dict_job(self):
+        with self.assertRaises(MalformedContent):
+            self.m.job({'a': 'string'}, block='test')
+
+    def test_job_invalid_num(self):
+        with self.assertRaises(MalformedContent):
+            self.m.job(1, block='test')
+
+    def test_job_invalid_nested_list(self):
+        with self.assertRaises(MalformedContent):
+            self.m.job([ 'a', [ 'a', '1'] ], block='test')
+
+    def test_job_list(self):
+        jobs = ['a', 'b']
+        builder = ['\t@a', '\t@b']
+
+        self.m.job(jobs, block='job-list')
+        self.assertEqual(self.m.get_block('job-list'), builder)
+
+class TestTargetsAndDependencies(TestCase):
+    @classmethod
+    def setUp(self):
+        self.m = MakefileCloth()
+        self.block = 'test-block'
+
+    def test_target_invalid_dict_target(self):
+        with self.assertRaises(MalformedContent):
+            self.m.target({'a': 'string'}, block='test')
+
+    def test_target_invalid_num_target(self):
+        with self.assertRaises(MalformedContent):
+            self.m.target(1, block='test')
+
+    def test_target_invalid_dict_dep(self):
+        with self.assertRaises(MalformedContent):
+            self.m.target('a', {'a': 'string'}, block='test')
+
+    def test_target_invalid_num_dep(self):
+        with self.assertRaises(MalformedContent):
+            self.m.target('a', 1, block='test')
+
+    def test_target_single_no_dep(self):
+        target = 'a'
+        result = ['a:']
+
+        self.m.target(target, block=self.block)
+        self.assertEqual(self.m.get_block(self.block), result)
+
+    def test_target_single_with_dep(self):
+        target = 'a'
+        dep = 'b'
+        result = ['a:b']
+
+        self.m.target(target, dep, block=self.block)
+        self.assertEqual(self.m.get_block(self.block), result)
+
+    def test_target_single_no_dep(self):
+        target = 'a'
+        result = ['a:']
+
+        self.m.target(target, block=self.block)
+        self.assertEqual(self.m.get_block(self.block), result)
+
+    def test_target_single_with_dep(self):
+        target = 'a'
+        dep = 'b'
+        result = ['a:b']
+
+        self.m.target(target, dep, block=self.block)
+        self.assertEqual(self.m.get_block(self.block), result)
+
+    def test_target_multi_no_dep(self):
+        target = ['a', 'b' ]
+        result = ['a b:']
+
+        self.m.target(target, block=self.block)
+        self.assertEqual(self.m.get_block(self.block), result)
+
+    def test_target_multi_with_dep(self):
+        target = ['a', 'b' ]
+        dep = 'c'
+        result = ['a b:c']
+
+        self.m.target(target, dep, block=self.block)
+        self.assertEqual(self.m.get_block(self.block), result)
+
+    def test_target_multi_with_multi_dep(self):
+        target = ['a', 'b' ]
+        dep = ['c', 'd' ]
+        result = ['a b:c d']
+
+        self.m.target(target, dep, block=self.block)
+        self.assertEqual(self.m.get_block(self.block), result)
+
+    def test_target_single_with_multi_dep(self):
+        target = 'a'
+        dep = ['b', 'c']
+        result = ['a:b c']
+
+        self.m.target(target, dep, block=self.block)
+        self.assertEqual(self.m.get_block(self.block), result)
+
+
+
+
+
+
+
+
+
+        
+
 class TestMakefileClothVariableMethods(TestCase):
     @classmethod
     def setUp(self):
@@ -112,3 +225,49 @@ class TestMakefileClothVariableMethods(TestCase):
 
         self.m.append_var(self.variable, v, block=b)
         self.assertEqual(self.m.get_block(b)[0], self.variable + ' += ' + v)
+
+    def test_new_var_meth1(self):
+        b = 'new_var1'
+        v = self.value1
+
+        self.m.new_var(self.variable, v, block=b)
+        self.assertEqual(self.m.get_block(b)[0], self.variable + ' ?= ' + v)
+
+    def test_new_var_meth2(self):
+        b = 'new_var2'
+        v = self.value2
+
+        self.m.new_var(self.variable, v, block=b)
+        self.assertEqual(self.m.get_block(b)[0], self.variable + ' ?= ' + v)
+
+    def test_new_var_meth3(self):
+        b = 'new_var3'
+        v = self.value2
+
+        self.m.new_var(self.variable, v, block=b)
+        self.assertEqual(self.m.get_block(b)[0], self.variable + ' ?= ' + v)
+
+    def test_simple_var_meth1(self):
+        b = 'simple_var1'
+        v = self.value1
+
+        self.m.simple_var(self.variable, v, block=b)
+        self.assertEqual(self.m.get_block(b)[0], self.variable + ' := ' + v)
+
+    def test_simple_var_meth2(self):
+        b = 'simple_var2'
+        v = self.value2
+
+        self.m.simple_var(self.variable, v, block=b)
+        self.assertEqual(self.m.get_block(b)[0], self.variable + ' := ' + v)
+
+    def test_simple_var_meth3(self):
+        b = 'simple_var3'
+        v = self.value2
+
+        self.m.simple_var(self.variable, v, block=b)
+        self.assertEqual(self.m.get_block(b)[0], self.variable + ' := ' + v)
+
+
+
+        

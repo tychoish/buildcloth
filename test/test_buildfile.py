@@ -16,7 +16,10 @@
 
 from unittest import TestCase
 
-from buildcloth.cloth import BuildCloth, BuildClothError
+from buildcloth.cloth import BuildCloth
+
+from buildcloth.err import (MalformedBlock, DuplicateBlock, MalformedRawContent,
+    MalformedContent, InvalidBuilder, MissingBlock)
 
 class TestBuilderRawMethods(TestCase): 
     @classmethod
@@ -33,44 +36,14 @@ class TestBuilderRawMethods(TestCase):
     def test_raw_string(self):
         b = 'raw1'
 
-        with self.assertRaises(BuildClothError):
+        with self.assertRaises(MalformedRawContent):
             self.m.raw(lines=self.content[0], block=b)
         
     def test_raw_nested_list(self):
         b = 'raw2'
 
-        with self.assertRaises(BuildClothError):
+        with self.assertRaises(MalformedRawContent):
             self.m.raw(lines=[self.content, self.content], block=b)
-
-class TestBuildfileVariableMethods(TestCase):
-    @classmethod
-    def setUp(self):
-        self.m = BuildCloth()
-        self.variable = 'var'
-        self.value0 = '$(makepathvar)/build/$(branch)/'
-        self.value1 = '$(makepathvar)/archive/$(branch)/'
-        self.value2 = 'bin lib opt srv local usr src'
-
-    def test_var_meth1(self):
-        b = 'var1'
-        v = self.value1
-
-        self.m.var(self.variable, v, block=b)
-        self.assertEqual(self.m.get_block(b)[0], self.variable + ' = ' + v)
-
-    def test_var_meth2(self):
-        b = 'var2'
-        v = self.value2
-
-        self.m.var(self.variable, v, block=b)
-        self.assertEqual(self.m.get_block(b)[0], self.variable + ' = ' + v)
-
-    def test_var_meth3(self):
-        b = 'var3'
-        v = self.value2
-
-        self.m.var(self.variable, v, block=b)
-        self.assertEqual(self.m.get_block(b)[0], self.variable + ' = ' + v)
 
 class TestBuildClothBlocks(TestCase):
     @classmethod
@@ -81,11 +54,11 @@ class TestBuildClothBlocks(TestCase):
         self.content = 'the md5 is ab98a7b91094a4ebd9fc0e1a93e985d6'
 
     def test_add_list(self):
-        with self.assertRaises(BuildClothError):
+        with self.assertRaises(MalformedContent):
             self.b._add_to_builder([self.content, self.content], self.block)
 
     def test_add_dict(self):
-        with self.assertRaises(BuildClothError):
+        with self.assertRaises(MalformedContent):
             self.b._add_to_builder({ self.block: self.content }, self.block)
 
     def test_block_in_builder(self):
