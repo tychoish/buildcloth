@@ -63,3 +63,13 @@ class MissingBlock(BuildClothError):
     that does not exit.
     """
     pass
+
+class NinjaClothError(BuildClothError):
+    """
+    Raised by the Ninja interface when constructing Ninja builders.
+    """
+    pass
+
+class InvalidRule(BuildClothError):
+    "Raised when attempting to specify an impossible in :mod:`rules`."
+    pass

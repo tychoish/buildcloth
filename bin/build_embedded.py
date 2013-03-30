@@ -6,17 +6,16 @@ def content(input):
     o = ['#!/usr/bin/python']
 
     with open('buildcloth/err.py', 'r') as f:
-        for line in f.readlines():
+        for line in f.readlines()[:66]:
             o.append(line.rstrip())
-        
 
     with open('buildcloth/cloth.py', 'r') as f: 
-        for line in f.readlines()[22:]:
+        for line in f.readlines()[23:]:
             o.append(line.rstrip())
 
     o.append('\n')
     with open(input, 'r') as f:
-        for lines in f.readlines()[18:]:
+        for lines in f.readlines()[23:]:
             o.append(lines.rstrip())
         
     return o

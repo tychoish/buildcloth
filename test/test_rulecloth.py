@@ -17,6 +17,7 @@
 from unittest import TestCase
 
 from buildcloth.rules import Rule, RuleCloth
+from buildcloth.err import InvalidRule, InvalidBuilder
 
 class TestRule(TestCase):
     @classmethod
@@ -59,7 +60,7 @@ class TestRuleName(TestCase):
         self.assertEqual(self.r._rule['name'], None)
 
     def test_name_requirement(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(InvalidRule):
             self.r.name()
     
     def test_add_name_helper(self):
@@ -81,31 +82,20 @@ class TestRuleCommand(TestCase):
 
     def test_command_helper(self):
         self.r.command(self.command)
-        self.assertEqual([self.command] , self.r._rule['command'])
-
-    def test_command_immutable(self):
-        self.r.command(self.command)
-
-        with self.assertRaises(Exception):
-            self.r.command(self.command + 'a change')
+        self.assertEqual(self.command , self.r._rule['command'])
 
     def test_default_command_state(self):
-        with self.assertRaises(KeyError):
-            self.r.command()
+        self.assertEqual(self.r.command(), None)
 
     def test_cmd_command_alias(self):
         self.assertEqual(self.r.cmd, self.r.command)
-
-    def test_command_return_helper(self):
-        self.r.command(self.command)
-        self.assertEqual([self.command] , self.r.command())
 
     def test_command_return_value(self):
         self.assertTrue(self.r.command(self.command))
 
     def test_command_string(self):
-        with self.assertRaises(Exception): 
-            self.r.command('a string')
+        cmd = 'a string'
+        self.assertEqual(self.r.command(cmd), cmd)
 
 class TestRuleDescription(TestCase):
     @classmethod
@@ -123,16 +113,6 @@ class TestRuleDescription(TestCase):
         self.r.description(self.description)
         self.assertEqual(self.description , self.r._rule['description'])
 
-    def test_description_immutable(self):
-        self.r.description(self.description)
-
-        with self.assertRaises(Exception):
-            self.r.description(self.description + 'change')
-
-    def test_default_description_state(self):
-        with self.assertRaises(KeyError):
-            self.r.description()
-
     def test_description_return_helper(self):
         self.r.description(self.description)
         self.assertEqual(self.description , self.r.description())
@@ -149,12 +129,6 @@ class TestRuleDepFile(TestCase):
     def test_depfile_helper(self):
         self.r.depfile(self.depfile)
         self.assertEqual(self.depfile , self.r._rule['depfile'])
-
-    def test_depfile_immutable(self):
-        self.r.depfile(self.depfile)
-
-        with self.assertRaises(Exception):
-            self.r.depfile(self.depfile + 'change')
 
     def test_default_depfile_state(self):
         with self.assertRaises(KeyError):
@@ -177,7 +151,7 @@ class TestRuleRestat(TestCase):
         self.assertTrue(self.r.restat())
 
     def test_rule_without_name(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(InvalidRule):
             self.r.rule()
 
 class TestBuildRules(TestCase):
@@ -187,43 +161,47 @@ class TestBuildRules(TestCase):
         self.rule_name = 'ccompile'
         self.example_rule = { 'name': self.rule_name, 'description': 'compile $file', 'command': ['cc $in'] }
 
+        self.rule_obj = Rule(self.rule_name)
+        self.rule_obj._rule = self.example_rule
+
     def test_add_rule_in_list(self):
-        self.rdb.add(self.example_rule)
+        self.rdb.add(self.rule_obj)
         self.assertTrue('ccompile' in self.rdb.list_rules())
     
     def test_add_rule_without_name(self):
-        rule = self.example_rule
-        del rule['name']
+        rule = self.rule_obj
+        del rule._rule['name'] 
 
-        with self.assertRaises(Exception):
-            self.rd.add(rule)
+        with self.assertRaises(InvalidRule):
+            self.rdb.add(rule)
             
     def test_add_rule_with_same_name(self):
-        self.rdb.add(self.example_rule)
-        with self.assertRaises(Exception):
-            self.rdb.add(self.example_rule)
+        self.rdb.add(self.rule_obj)
+        with self.assertRaises(InvalidRule):
+            self.rdb.add(self.rule_obj)
 
     def test_add_rule_without_name(self):
-        self.rdb.add(self.example_rule)
+        self.rdb.add(self.rule_obj)
         self.assertFalse('name' in self.rdb.rules[self.rule_name])
 
     def test_invalid_output_type(self):
         self.rdb.output = 'scons'
-        self.rdb.add(self.example_rule)
+        self.rdb.add(self.rule_obj)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(InvalidBuilder):
             self.rdb.fetch(self.rule_name)
 
     def test_ninja_fetch_output(self):
         self.rdb.output = 'ninja'
-        self.rdb.add(self.example_rule)
-
+        self.rdb.add(self.rule_obj)
+        
         ninja_rule = ['rule ccompile', '    command = cc $in', '    description = CCOMPILE compile $file']
         self.assertEqual(self.rdb.fetch(self.rule_name), ninja_rule)
 
     def test_make_fetch_output(self):
         self.rdb.output = 'make'
-        self.rdb.add(self.example_rule)
+
+        self.rdb.add(self.rule_obj)
 
         make_rule = ['\t@cc $in', '\t@echo compile $file']
         self.assertEqual(self.rdb.fetch(self.rule_name), make_rule)

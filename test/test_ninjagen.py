@@ -16,7 +16,7 @@ from unittest import TestCase
 from collections import OrderedDict
 
 from buildcloth.ninja import NinjaFileCloth
-from buildcloth.err import BuildClothError
+from buildcloth.err import BuildClothError, MalformedContent
 
 def munge_lines(line_list):
     i = 0
@@ -60,13 +60,13 @@ class TestNinjaBuilderRuleMethods(TestCase):
     def setUp(self): 
         self.n = NinjaFileCloth(indent=2)
         self.name = 'ruletest'
-        self.cmd = 'cat /proc/cpuinfo'
+        self.cmd = ['cat /proc/cpuinfo']
         self.description = 'return info about the cpu'
         self.depfile = 'ruletest.d'
         self.generator = True
         self.restat = True
         self.rsp = ('ruletest.rsp', 'rspfile-file-content-content')
-        self.rule_dict = { 'command': [ self.cmd ],
+        self.rule_dict = { 'command':  self.cmd,
                            'description': self.description,
                            'generator': self.generator,
                            'depfile': self.depfile,
@@ -75,7 +75,7 @@ class TestNinjaBuilderRuleMethods(TestCase):
                            'rspfile_content': self.rsp[1], 
                            }
 
-        self.rule_dict_simple = { 'command': [ self.cmd ],
+        self.rule_dict_simple = { 'command': self.cmd,
                                   'description': self.description
                                 }
 
@@ -167,13 +167,14 @@ class TestNinjaBuilderRuleMethods(TestCase):
         block_name = 'multi-line'
         mld = self.rule_dict
 
-        mld['command'].append(self.cmd)
+        mld['command'].append(self.cmd[0])
         
         self.n.rule(self.name, self.rule_dict, block=block_name)
 
         t = self.n.get_block(block_name)
+        print(t)
 
-        cmd_line = "  command = " + self.cmd + "; " + self.cmd + "; "
+        cmd_line = "  command = " + self.cmd[0] + "; " + self.cmd[0] + "; "
         self.assertEqual(t[1], cmd_line)
 
     def test_single_command(self):
@@ -183,7 +184,7 @@ class TestNinjaBuilderRuleMethods(TestCase):
         self.n.rule(self.name, self.rule_dict, block=block_name)
         t = self.n.get_block(block_name)
 
-        cmd_line = "  command = " + self.cmd 
+        cmd_line = "  command = " + self.cmd[0]
         self.assertEqual(t[1], cmd_line)
 
     def test_string_cmd(self):
