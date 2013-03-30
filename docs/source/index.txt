@@ -4,7 +4,7 @@ Buildcloth, a Build System Generator
 
 Buildcloth is a Python library for specifying and maintaining build
 system descriptions (e.g. :term:`Makefile` and :term:`ninja.build`
-files,) using to encode build logic and generation. Buil/'dcloth is
+files,) using to encode build logic and generation. Buildcloth is
 great for projects that: 
 
 - want to encode the logic of build processes in Python rather than

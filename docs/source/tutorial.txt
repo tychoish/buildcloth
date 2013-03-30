@@ -2,6 +2,11 @@
 Buildfile Generator README
 ==========================
 
+.. note:: 
+   
+   This document reflects a previous version of Buildcloth and is
+   undergoing revision. Pardon the confusion.
+
 Overview
 --------
 
