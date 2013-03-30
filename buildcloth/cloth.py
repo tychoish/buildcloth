@@ -312,7 +312,7 @@ class BuildCloth(object):
                                 :attr:`~cloth.BuildCloth.builder` content to.
 
         :param string block: The name of a :attr:`~cloth.BuildCloth.builder`
-                             :term:`block``.
+                             :term:`block`.
 
         Uses :meth:`~cloth.write_file()`. In default operation,
         :meth:`~cloth.BuildCloth.write()`

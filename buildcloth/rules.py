@@ -193,8 +193,7 @@ class RuleCloth(object):
 
     def list_rules(self):
         """
-        :returns: A list of a the names of all rules that exist in the
-                  :class:`~rules.RuleCloth` object.
+        :returns: A list of a the names of all rules that exist in the :class:`~rules.RuleCloth` object.
         """
         return [ k for k in self.rules.keys() ]
 
@@ -207,7 +206,7 @@ class RuleCloth(object):
                              the block in :attr:`~cloth.BuildCloth.builder` to
                              create and access.
 
-        :returns: The output of :method:`~cloth.BuildCloth.get_block()` for
+        :returns: The output of :meth:`~cloth.BuildCloth.get_block()` for
                   either Ninja or Makefiles, depending on ``name``.
 
         :raises: :exc:`~err.InvalidBuilder` when :attr:`~cloth.RuleCloth.output`
@@ -224,7 +223,7 @@ class RuleCloth(object):
         """
         An internal method used by :`~rules.RuleCloth.fetch()` to process
         content from :attr:`~rules.RuleCloth.rules` and return
-        :method:`~cloth.BuildCloth.get_block()` in Makefile format.
+        :meth:`~cloth.BuildCloth.get_block()` in Makefile format.
         """
         rule = self.rules[name]
 
@@ -244,7 +243,7 @@ class RuleCloth(object):
         """
         An internal method used by :`~rules.RuleCloth.fetch()` to process
         content from :attr:`~rules.RuleCloth.rules` and return
-        :method:`~cloth.BuildCloth.get_block()` in Ninja format.
+        :meth:`~cloth.BuildCloth.get_block()` in Ninja format.
         """
         n = NinjaFileCloth(indent=indent)
 

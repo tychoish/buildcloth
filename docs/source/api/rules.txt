@@ -1,5 +1,5 @@
 ===================================
-``Rules`` -- Build Rule Abstraction
+``rules`` -- Build Rule Abstraction
 ===================================
 
 .. automodule:: rules
