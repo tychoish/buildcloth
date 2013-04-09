@@ -101,21 +101,23 @@ class BuildCloth(object):
     # The following two methods allow more direct interaction with the
     # internal representation of the buildfile.
 
-    def block(self, block):
+    def block(self, block, cloth=[]):
         """
         :param string block: The name of a build file block to create.
 
-        Raises a :exc:`~err.DuplicateBlock` error if the block exists,
-        otherwise creates a new empty block and inserts a section break with the
-        name of the block as the title.
+        :param list cloth: Optional; defaults to an empty block. The content of
+                        a build cloth block to insert.
+
+        Raises a :exc:`~err.DuplicateBlock` error if the block exists, otherwise
+        creates a new empty block, or a block containing the content of the
+        ``cloth`` value.
         """
 
         if block in self.builder:
             raise DuplicateBlock('Cannot add "%s" to build. %s already exists.'
                                  % (block, block))
         else:
-            self.builder[block] = []
-            self.section_break(block, block)
+            self.builder[block] = cloth
 
     def raw(self, lines, block='_all'):
         """

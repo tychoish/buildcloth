@@ -21,7 +21,7 @@ from buildcloth.cloth import BuildCloth
 from buildcloth.err import (MalformedBlock, DuplicateBlock, MalformedRawContent,
     MalformedContent, InvalidBuilder, MissingBlock)
 
-class TestBuilderRawMethods(TestCase): 
+class TestBuilderRawMethods(TestCase):
     @classmethod
     def setUp(self):
         self.m = BuildCloth()
@@ -30,7 +30,7 @@ class TestBuilderRawMethods(TestCase):
     def test_raw_list(self):
         b = 'raw0'
         self.m.raw(lines=self.content, block=b)
-       
+
         self.assertEqual(self.content, self.m.get_block(b))
 
     def test_raw_string(self):
@@ -38,7 +38,7 @@ class TestBuilderRawMethods(TestCase):
 
         with self.assertRaises(MalformedRawContent):
             self.m.raw(lines=self.content[0], block=b)
-        
+
     def test_raw_nested_list(self):
         b = 'raw2'
 
@@ -83,3 +83,14 @@ class TestBuildClothBlocks(TestCase):
         self.assertEqual(b_block, b_block1)
         self.assertIsNot(b_block, b_block1)
         self.assertEqual(b_block + b_block1, self.b.builder['_all'])
+
+    def teset_block_method_empty(self):
+        self.b.block('nn')
+        self.assertEqual(self.b.get_block('nn'), [])
+
+    def teset_block_method_with_block(self):
+        self.b.section_break('test of nested', block='part1')
+
+        self.b.block('part2', self.b.get_block('part1'))
+
+        self.assertEqual(self.get_block('part1'), self.get_block('part2'))
