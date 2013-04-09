@@ -1,4 +1,4 @@
-from buildrule import BuildRules, Rule
+from  import BuildRules, Rule
 from buildergen import MakefileBuilder, NinjaFileBuilder
 
 if __name__ == '__main__':
@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     db.add(foo.rule())
     db.add(bar.rule())
-    
+
     from pprint import pprint
 
     pprint(db.rules)
