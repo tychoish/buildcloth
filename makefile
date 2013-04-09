@@ -28,3 +28,13 @@ $(output)/ninjacloth.py:$(modsrc)/ninja.py $(output)/ $(modsrc)/cloth.py bin/bui
 	@$(PYTHONBIN) bin/build_embedded.py $@ $<
 	@echo [build]: created $@
 embedded:$(output)/makecloth.py $(output)/ninjacloth.py
+
+docs:
+	@$(MAKE) -C docs/ html
+stage-docs:
+	@$(MAKE) -C ../institute/ stage push
+push-docs:
+	@$(MAKE) -C ../institute/ publish push
+release:all
+	python setup.py sdist upload
+	@$(MAKE) -C ../institute/ stage push

@@ -79,28 +79,14 @@
     <link rel="shortcut icon" href="{{ pathto('_static/' + favicon, 1) }}"/>
     {%- endif %}
 {%- block linktags %}
-    {%- if hasdoc('about') %}
-    <link rel="author" title="{{ _('About these documents') }}" href="{{ pathto('about') }}" />
-    {%- endif %}
-    {%- if hasdoc('genindex') %}
-    <link rel="index" title="{{ _('Index') }}" href="{{ pathto('genindex') }}" />
-    {%- endif %}
-    {%- if hasdoc('search') %}
-    <link rel="search" title="{{ _('Search') }}" href="{{ pathto('search') }}" />
-    {%- endif %}
-    {%- if hasdoc('copyright') %}
-    <link rel="copyright" title="{{ _('Copyright') }}" href="{{ pathto('copyright') }}" />
-    {%- endif %}
+    {%- if hasdoc('about') %}<link rel="author" title="{{ _('About these documents') }}" href="{{ pathto('about') }}" />{%- endif %}
+    {%- if hasdoc('genindex') %}<link rel="index" title="{{ _('Index') }}" href="{{ pathto('genindex') }}" />{%- endif %}
+    {%- if hasdoc('search') %}<link rel="search" title="{{ _('Search') }}" href="{{ pathto('search') }}" />{%- endif %}
+    {%- if hasdoc('copyright') %}<link rel="copyright" title="{{ _('Copyright') }}" href="{{ pathto('copyright') }}" />{%- endif %}
     <link rel="top" title="{{ docstitle|e }}" href="{{ pathto('index') }}" />
-    {%- if parents %}
-    <link rel="up" title="{{ parents[-1].title|striptags|e }}" href="{{ parents[-1].link|e }}" />
-    {%- endif %}
-    {%- if next %}
-    <link rel="next" title="{{ next.title|striptags|e }}" href="{{ next.link|e }}" />
-    {%- endif %}
-    {%- if prev %}
-    <link rel="prev" title="{{ prev.title|striptags|e }}" href="{{ prev.link|e }}" />
-    {%- endif %}
+    {%- if parents %}<link rel="up" title="{{ parents[-1].title|striptags|e }}" href="{{ parents[-1].link|e }}" />{%- endif %}
+    {%- if next %}<link rel="next" title="{{ next.title|striptags|e }}" href="{{ next.link|e }}" />{%- endif %}
+    {%- if prev %} <link rel="prev" title="{{ prev.title|striptags|e }}" href="{{ prev.link|e }}" />{%- endif %}
 {%- endblock %}
 {%- block extrahead %} {% endblock %}
   </head>
@@ -110,24 +96,22 @@
 {%- block content %}
   {%- block sidebar1 %}{% endblock %}
     <div class="document">
-  {%- block document %}
-      <div class="documentwrapper">
-      {%- if render_sidebar %}
-        <div class="bodywrapper">
-      {%- endif %}
+      {%- block document %}
+         <div class="documentwrapper">
+          {%- if render_sidebar %}<div class="bodywrapper">{%- endif %}
           <div class="body">
             {% block body %} {% endblock %}
           </div>
-      {%- if render_sidebar %}
-        </div>
-      {%- endif %}
-      </div>
-  {%- endblock %}
-  {%- block sidebar2 %}
-      {{ sidebar() }}
-  {% endblock %}
-      <div class="clearer"></div>
-    </div>
+          {%- if render_sidebar %}</div>{%- endif %}
+         </div>
+{%- endblock %}
+
+{%- block sidebar2 %}
+     {{ sidebar() }}
+{% endblock %}
+
+<div class="clearer"></div>
+   </div>
 {%- endblock %}
 
 {%- block footer %}
