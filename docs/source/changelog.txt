@@ -1,0 +1,21 @@
+====================
+Buildcloth Changelog
+====================
+
+Release 0.2.0
+-------------
+
+:date: *pending*
+
+- Improved :meth:`~cloth.BuildCloth.cloth()` semantics.
+- Improved :doc:`/tutorial` documentation.
+
+Release 0.1.0
+-------------
+
+:date: 2013-03-30
+
+- Initial Release on PyPI.
+- API Documentation
+- Unit testing Coverage.
+- :mod:`rules` module as higher level abstraction.
