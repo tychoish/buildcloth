@@ -76,7 +76,7 @@ class MakefileCloth(BuildCloth):
         if isinstance(target, list):
             target = ' '.join(target)
 
-        if not isinstance(target, str):
+        if not isinstance(target, basestring):
             err = 'Targets must be strings before inserting them to builder.'
             raise MalformedContent(err)
 
@@ -86,7 +86,7 @@ class MakefileCloth(BuildCloth):
             if isinstance(dependency, list):
                 dependency = ' '.join(dependency)
 
-            if not isinstance(dependency, str):
+            if not isinstance(dependency, basestring):
                 err = 'Dependencies must be strings before inserting them to builder.'
                 raise MalformedContent(err)
 
