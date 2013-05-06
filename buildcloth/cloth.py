@@ -216,7 +216,7 @@ class BuildCloth(object):
         if raw is True:
             for line in data:
                 add(line, block)
-        elif not isinstance(data, bassestring):
+        elif not isinstance(data, basestring):
             raise MalformedContent('Avoided adding malformed data to BuildCloth.')
         else:
             add(data, block)
