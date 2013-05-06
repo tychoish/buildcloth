@@ -22,7 +22,11 @@ handle the internal representation of the build file output.
 from buildcloth.err import ( MalformedBlock, DuplicateBlock,
     MalformedRawContent, MalformedContent, InvalidBuilder, MissingBlock)
 
-import os
+# a kludge to get python 3.1 to work.
+try:
+    basestring = basestring
+except NameError: 
+    basestring = str
 
 def print_output(list):
     """
