@@ -7,7 +7,7 @@ modsrc = buildcloth
 
 test:testpy
 
-test-all: testpy2 testpy3 testpypy
+test-all: testpy2 testpy3 # testpypy
 
 testpy:$(wildcard $(modsrc)*.py)
 	@python test.py
