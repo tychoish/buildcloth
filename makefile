@@ -10,7 +10,7 @@ test:testpy
 test-all: testpy2 testpy3 testpypy
 
 testpy:$(wildcard $(modsrc)*.py)
-	@/usr/bin/python test.py
+	@python test.py
 	@echo [test]: Python tests complete.
 testpy2:$(wildcard $(modsrc)*.py)
 	@/usr/bin/python2 test.py
