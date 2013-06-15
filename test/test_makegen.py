@@ -268,6 +268,36 @@ class TestMakefileClothVariableMethods(TestCase):
         self.m.simple_var(self.variable, v, block=b)
         self.assertEqual(self.m.get_block(b)[0], self.variable + ' := ' + v)
 
+    def test_include(self):
+        i = 'makefile.inc'
+        o = 'include makefile.inc'
+        b = 'incb'
 
+        self.m.include(i, block=b)
 
-        
+        self.assertEqual(self.m.get_block(b)[0], o)
+
+    def test_include_list(self):
+        i = ['makefile.inc0', 'makefile.inc1']
+        o = [ 'include ' + inc for inc in i ]
+        b = 'incb'
+
+        self.m.include(i, block=b)
+        self.assertEqual(self.m.get_block(b), o)
+
+    def test_include_list_ignore(self):
+        i = ['makefile.inc0', 'makefile.inc1']
+        o = [ '-include ' + inc for inc in i ]
+        b = 'incb'
+
+        self.m.include(i, ignore=True, block=b)
+        self.assertEqual(self.m.get_block(b), o)
+
+    def test_include_ignore(self):
+        i = 'makefile.inc'
+        o = '-include makefile.inc'
+        b = 'incb'
+
+        self.m.include(i, ignore=True, block=b)
+
+        self.assertEqual(self.m.get_block(b)[0], o)

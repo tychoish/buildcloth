@@ -18,14 +18,12 @@
 :mod:`cloth` holds the core Buildcloth functions that generate output, and
 handle the internal representation of the build file output.
 """
+import sys
 
 from buildcloth.err import ( MalformedBlock, DuplicateBlock,
     MalformedRawContent, MalformedContent, InvalidBuilder, MissingBlock)
 
-# a kludge to get python 3.1 to work.
-try:
-    basestring = basestring
-except NameError: 
+if sys.version_info >= (3, 0):
     basestring = str
 
 def print_output(list):
@@ -60,7 +58,7 @@ class BuildCloth(object):
     interface for producing output, as well as the structure for representing
     build system fragments internally.
 
-    :class:`~cloth.BuildCloth` have a notion of :term:`block <block>`, or
+    :class:`~cloth.BuildCloth` have a notion of :term:`block`, or
     sections of a makefile, identified by keys in the
     :attr:`~cloth.BuildCloth.builder` dictionary. All items are always added to
     the ``_all`` key, which is the default block, but you can optionally add
