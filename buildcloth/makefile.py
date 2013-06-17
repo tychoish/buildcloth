@@ -19,7 +19,7 @@
 a thin wrapper around the basic functionality for :class:`~cloth.BuildCloth()`. 
 """
 
-from buildcloth.cloth import BuildCloth
+from buildcloth.cloth import BuildCloth, basestring
 from buildcloth.err import MalformedContent
 
 class MakefileCloth(BuildCloth):

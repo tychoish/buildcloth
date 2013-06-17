@@ -25,6 +25,8 @@ from buildcloth.err import ( MalformedBlock, DuplicateBlock,
 
 if sys.version_info >= (3, 0):
     basestring = str
+else:
+    basestring = basestring
 
 def print_output(list):
     """
