@@ -15,7 +15,3 @@
 # Author: Sam Kleinman (tychoish)
 
 __version__ = '0.2.0-dev'
-
-from buildcloth.makefile import MakefileCloth
-from buildcloth.ninja import NinjaFileCloth
-from buildcloth.rules import Rule, RuleCloth

@@ -16,7 +16,7 @@
 
 from unittest import TestCase
 
-from buildcloth import MakefileCloth
+from buildcloth.makefile import MakefileCloth
 from buildcloth.err import MalformedContent
         
 class TestMakefileBuilderMessageMethods(TestCase):

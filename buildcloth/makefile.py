@@ -19,8 +19,14 @@
 a thin wrapper around the basic functionality for :class:`~cloth.BuildCloth()`. 
 """
 
-from buildcloth.cloth import BuildCloth, basestring
+from buildcloth.cloth import BuildCloth
 from buildcloth.err import MalformedContent
+
+import sys
+
+if sys.version_info >= (3, 0):
+    basestring = str
+
 
 class MakefileCloth(BuildCloth):
     def __init__(self, makefile=None):
