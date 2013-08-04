@@ -2,8 +2,12 @@ PYTHONBIN = python
 output = build
 modsrc = buildcloth
 
+tags:
+	@find buildcloth -name "*.py" | grep -v "\.\#" | etags --output TAGS -
+	@echo [dev]: regenerated tags
 
-.PHONY:embedded testpy2 testpy3 testpypy
+
+.PHONY:embedded testpy2 testpy3 testpypy docs
 
 test:testpy
 

@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 :mod:`rules` provides two classes, :class:`~rules.Rule` and
 :class:`rules.RuleCloth`, which provide an additional layer of abstraction
@@ -29,7 +30,8 @@ from buildcloth.err import InvalidRule, InvalidBuilder
 
 class Rule(object):
     """
-    :class:`~rules.Rule()` represents 
+    :class:`~rules.Rule()` represents a build system rule, and provides an
+    interface for constructing a rule.
     """
     def __init__(self, name=None):
         """
@@ -195,7 +197,7 @@ class RuleCloth(object):
         """
         :returns: A list of a the names of all rules that exist in the :class:`~rules.RuleCloth` object.
         """
-        return [ k for k in self.rules.keys() ]
+        return self.rules.keys()
 
     def fetch(self, name, block='_all'):
         """

@@ -18,7 +18,7 @@ from unittest import TestCase
 
 from buildcloth.makefile import MakefileCloth
 from buildcloth.err import MalformedContent
-        
+
 class TestMakefileBuilderMessageMethods(TestCase):
     @classmethod
     def setUp(self):
@@ -186,15 +186,6 @@ class TestTargetsAndDependencies(TestCase):
         self.m.target(target, dep, block=self.block)
         self.assertEqual(self.m.get_block(self.block), result)
 
-
-
-
-
-
-
-
-
-        
 
 class TestMakefileClothVariableMethods(TestCase):
     @classmethod
