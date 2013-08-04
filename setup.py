@@ -24,7 +24,7 @@ setup(
         'console_scripts': [
             'buildc = buildcloth.buildc:main',
             ],
-        }
+        },
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',

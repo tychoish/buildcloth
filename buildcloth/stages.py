@@ -731,7 +731,7 @@ class BuildSystemGenerator(object):
 
     def finalize(self):
         """
-        :raises: :exc:`~err.InvalidBuildSystem` if you call
+        :raises: :exc:`~err.InvalidSystem` if you call
            :meth:`~stages.BuildSystemGenerator.finalize()` more than once on a
            single :class:`~stages.BuildSystemGenerator()` object.
 
@@ -756,7 +756,7 @@ class BuildSystemGenerator(object):
                     logger.info('added tasks from build stages to build system.')
                 else:
                     logger.critical('cannot finalize empty generated BuildSystem object.')
-                    raise InvalidBuildSystem
+                    raise InvalidSystem
 
             elif len(self._process_tree) > 0:
                 self.system = BuildSystem()
@@ -897,20 +897,23 @@ class BuildSystemGenerator(object):
         """
 
         logger.debug('opening yaml file {0}'.format(filename))
-        with open(filename, 'r') as f:
-            try:
-                jobs = yaml.safe_load_all(f)
-            except NameError:
-                msg = 'attempting to load a yaml definition without PyYAML installed.'
-                logger.critical(msg)
-                raise StageRunError(msg)
+        try:
+            with open(filename, 'r') as f:
+                try:
+                    jobs = yaml.safe_load_all(f)
+                except NameError:
+                    msg = 'attempting to load a yaml definition without PyYAML installed.'
+                    logger.critical(msg)
+                    raise StageRunError(msg)
 
-            job_count = 0
-            for spec in jobs:
-                self._process_job(spec)
-                job_count += 1
+                job_count = 0
+                for spec in jobs:
+                    self._process_job(spec)
+                    job_count += 1
 
-        logger.debug('loaded {0} jobs from {1}'.format(job_count, filename))
+            logger.debug('loaded {0} jobs from {1}'.format(job_count, filename))
+        except IOError:
+            logger.warning('file {0} does not exist'.format(filename))
 
     def ingest_json(self, filename):
         """
@@ -923,13 +926,16 @@ class BuildSystemGenerator(object):
         """
 
         logger.debug('opening json file {0}'.format(filename))
-        with open(filename, 'r') as f:
-            jobs = json.load(f)
+        try:
+            with open(filename, 'r') as f:
+                jobs = json.load(f)
 
-            for spec in jobs:
-                self._process_job(spec)
+                for spec in jobs:
+                    self._process_job(spec)
 
-        logger.debug('loaded {0} jobs from {1}'.format(job_count, filename))
+            logger.debug('loaded {0} jobs from {1}'.format(job_count, filename))
+        except IOError:
+            logger.warning('file {0} does not exist'.format(filename))
 
     def _process_stage(self, spec, spec_keys):
         """

@@ -303,7 +303,7 @@ class BuildCloth(object):
 
         output = []
 
-        if type(block_order) is not list:
+        if not isinstance(block_order, list):
             raise MissingBlock('Cannot write blocks not specified as a list.')
         else:
             for block in block_order:
