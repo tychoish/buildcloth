@@ -10,45 +10,54 @@ complete introduction to Buildcloth.
 Overview
 --------
 
-Buildcloth is a Python library for specifying and maintaining build
-system descriptions (e.g. :term:`Makefile` and :term:`ninja.build`
-files,) using to encode build logic and generation. Buildcloth is
-great for projects that: 
+Buildcloth is a Python library for specifying build systems. You can
+think of Buildcloth as a meta-build toolkit, but it's really about
+defining and maintaining complex multi-stage processes as easily as
+possible. There are three different tools in the buildcloth toolkit:
 
-- want to encode the logic of build processes in Python rather than
-  in a build system's own syntax *but* don't want to implement a
-  custom build automation tool.
+- Simple procedural interfaces for generating build system definition
+  files for `Make`_ and `Ninja`_, in easy to use Python.
 
-- want to integrate components and data from Python applications or
-  other data sources without needing to maintain cumbersome and
-  redundant build scripts.
+- A higher level cross-tool abstraction layer for specifying
+  build-rules that you can use to generate :term:`Makefile` and
+  :term:`ninja.build` output.
 
-- want to use familiar unit testing tools to ensure correctness for
-  build systems.
+- A simple stage-based Python tool for defining and running concurrent
+  (i.e. multiprocessing) Python-based build systems with minimal
+  overhead.
+
+Although these components are distinct and are available for
+independent use, they provide a basis for building and combining
+ad-hoc tools to orchestrate and implement build systems, without
+risking insanity or fragility.
 
 Features
 --------
 
-- Buildcloth provides interface for generating both `Ninja`_ and
-  `Make`_ build systems.
-  
 - Buildcloth is agnostic about your approach to storing build
-  generator data: the build cloth system may generate build system
-  from YAML files, database systems, or derive information from the
-  source directly.
+  generator data: the build cloth system may generate build systems
+  from YAML or JSON files, database systems, derive information from
+  the source directly.
 
-- Buildcloth minimizes the amount of Make or Ninja-specific knowledge
-  required to engineer an effective build system. At the same time,
-  the build-system output can be *very* human readable, which makes
-  debugging easier and minimizes dependence on buildcloth.
-  
+- If you're comfortable with basic Python code and understand your
+  build process, you can use Buildcloth.
+
+  For generating Make and Ninja files, Buildcloth minimizes the amount
+  of Make or Ninja-specific knowledge required to engineer an
+  effective build system. At the same time, the build-system output
+  can be *very* human readable, which makes debugging easier and
+  minimizes dependence on buildcloth.
+
+  For stage-based builds, Buildcloth provides straight forward
+  idiomatic Python tools for defining a build system.
+
 - Buildcloth is attempting to insulate build system implementation
   from your build system, making it easier to transition between (and
-  test) Make, Ninja, and potentially other tools.
+  test) Make, Ninja, and potentially other custom tools.
 
 .. _`Ninja`:http://martine.github.com/ninja/
 .. _`Make`:http://www.gnu.org/software/make/manual/make.html
-  
+
 Use
 ---
 

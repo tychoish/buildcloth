@@ -1,0 +1,7 @@
+====================================
+``stages`` -- Build System Generator
+====================================
+
+.. automodule:: stages
+   :members:
+   :private-members:

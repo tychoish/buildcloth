@@ -37,39 +37,77 @@ class BuildClothError(Exception):
         else:
             return "Error: " + self.msg
 
-class MalformedBlock(BuildClothError):
+class BuildClothBaseError(BuildClothError):
+    "Base error class for all generated build file errors."
+
+class MalformedBlock(BuildClothBaseError):
     "Raised when attempting to insert an invalid block."
     pass
 
-class DuplicateBlock(BuildClothError):
+class DuplicateBlock(BuildClothBaseError):
     "Raised when inserting a duplicate block to avoid overwriting data."
     pass
 
-class MalformedRawContent(BuildClothError):
+class MalformedRawContent(BuildClothBaseError):
     "Raised when attempting to insert malformed raw content directly to a build system object."
     pass
 
-class MalformedContent(BuildClothError):
+class MalformedContent(BuildClothBaseError):
     "Raised when attempting to insert malformed content to builder."
     pass
 
-class InvalidBuilder(BuildClothError):
+class InvalidBuilder(BuildClothBaseError):
     "Raised when a :attr:`~cloth.BuildCloth.builder` block is not valid."
     pass
 
-class MissingBlock(BuildClothError):
+class MissingBlock(BuildClothBaseError):
     """
     Raised when attempting to access a :attr:`~cloth.BuildCloth.builder` block
     that does not exit.
     """
     pass
 
-class NinjaClothError(BuildClothError):
+class NinjaClothError(BuildClothBaseError):
     """
     Raised by the Ninja interface when constructing Ninja builders.
     """
     pass
 
-class InvalidRule(BuildClothError):
+class InvalidRule(BuildClothBaseError):
     "Raised when attempting to specify an impossible in :mod:`rules`."
+    pass
+
+#################### Build Stages Errors ####################
+
+class BuildStagesError(BuildClothError):
+    "Base error class for all build stage errors."
+    pass
+
+class InvalidStage(BuildStagesError):
+    """
+    Raised when an element in a :class:`~stages.BuildSystem` or
+    :class:`~stages.BuildSteps` object is malformed or erroneous. Only the
+    "strict" modes will raise this exception, and would otherwise return
+    ``False``.
+    """
+    pass
+
+class InvalidJob(BuildStagesError):
+    """
+    Raised when attempting to add or modify an invalid job in a build system.
+    """
+    pass
+
+class StageClosed(BuildStagesError):
+    """Raised when attempting to modify or re-close a finalized build
+    :class:`~stages.BuildSystem` or :class:`~stages.BuildSteps` object."""
+    pass
+
+class StageRunError(BuildStagesError):
+    """Raised when attempting to run build system jobs."""
+    pass
+
+class InvalidSystem(BuildStagesError):
+    """Raised when attempting to manipulate build invalid BuildSystem
+    objects."""
     pass

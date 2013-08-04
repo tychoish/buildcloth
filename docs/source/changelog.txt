@@ -9,6 +9,9 @@ Release 0.2.0
 
 - Improved :meth:`~cloth.BuildCloth.cloth()` semantics.
 - Improved :doc:`/tutorial` documentation.
+- Python 3 compatibility.
+- Assorted Bug fixes.
+- "Stages Module" and tests and associated documentation changes.
 
 Release 0.1.0
 -------------
