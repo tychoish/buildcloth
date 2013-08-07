@@ -2,12 +2,30 @@ from __future__ import absolute_import
 
 from multiprocessing import cpu_count
 from buildcloth.makefile import MakefileCloth
-from buildcloth.stages import BuildSystemGenerator
+from buildcloth.stages import BuildSystemGenerator, is_function
+import sys
 import argparse
 import os
 import logging
 
 logger = logging.getLogger(__name__)
+
+def _import_strings():
+    try:
+        from buildc import strings
+    except ImportError:
+        from buildc import strs as strings
+    else:
+        strings = {}
+
+    if is_function(strings):
+        strings = strings()
+
+    if not isinstance(strings, dict):
+        logger.critical('strings object is not a dictionary')
+        raise TypeError2
+
+    return strings
 
 ############### function to generate and run buildsystem ###############
 
@@ -22,6 +40,7 @@ def stages(jobs, stages, file):
     else:
         functions = None
 
+    strings = _import_strings()
     bsg = BuildSystemGenerator(functions)
 
     if functions is None:
@@ -29,9 +48,9 @@ def stages(jobs, stages, file):
 
     for fn in file:
         if fn.endswith('json'):
-            bsg.ingest_json(fn)
+            bsg.ingest_json(fn, strings)
         elif fn.endswith('yaml') or fn.endswith('yml'):
-            bsg.ingest_yaml(fn)
+            bsg.ingest_yaml(fn, strings)
         else:
             logger.warning('format of {0} is unclear, not parsing'.format(fn))
 
@@ -146,12 +165,15 @@ def _generate_make_jobs(tasks):
 def _load_build_specs(files):
     targets = []
 
+    strings = _import_strings()
+
     for fn in files:
         try:
             with open(fn, 'r') as f:
                 if fn.endswith('json'):
                     tg = json.load(f)
                     for i in tg:
+                        i = BuildSystemGenerator.process_strings(i, strings)
                         if isinstance(i, list):
                             for doc in i:
                                 tg.append(i)
@@ -161,6 +183,7 @@ def _load_build_specs(files):
                             logger.warning('structure of json file {0}is unclear, ignoring file.'.format(fn))
                 elif fn.endswith('yaml') or fn.endswith('yml'):
                     for i in yaml.safe_load_all(f):
+                        i = BuildSystemGenerator.process_strings(i, strings)
                         build_targets.append(i)
                 else:
                     logger.warning('format of {0} is unclear, not parsing'.format(fn))
@@ -184,8 +207,12 @@ def cli_ui():
                              to use buildc as a metabuild tool.")
     parser.add_argument('--file', '-f', action='append',
                         default=[os.path.join(os.getcwd(), 'buildc.yaml')])
+    parser.add_argument('--path', '-p', action='append',
+                        default=[os.getcwd()])
     parser.add_argument('stages', nargs="*", action='store', default=None)
     args = parser.parse_args()
+
+    sys.path.extend(args.path)
 
     log_level = logging.WARNING
     logging.basicConfig(level=log_level)
