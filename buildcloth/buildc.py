@@ -2,7 +2,8 @@ from __future__ import absolute_import
 
 from multiprocessing import cpu_count
 from buildcloth.makefile import MakefileCloth
-from buildcloth.stages import BuildSystemGenerator, is_function
+from buildcloth.system import BuildSystemGenerator, is_function
+
 import sys
 import argparse
 import os
@@ -29,7 +30,7 @@ def _import_strings():
 
 ############### function to generate and run buildsystem ###############
 
-def stages(jobs, stages, file):
+def stages(jobs, stages, file, check):
     if os.path.isdir('buildc') or os.path.exists('buildc.py'):
         try:
             from buildc import functions
@@ -42,6 +43,7 @@ def stages(jobs, stages, file):
 
     strings = _import_strings()
     bsg = BuildSystemGenerator(functions)
+    bsg.check_method = check
 
     if functions is None:
         logger.info('no python functions pre-loaded')
@@ -207,6 +209,10 @@ def cli_ui():
                              to use buildc as a metabuild tool.")
     parser.add_argument('--file', '-f', action='append',
                         default=[os.path.join(os.getcwd(), 'buildc.yaml')])
+    parser.add_argument('--check', '-f', action='append',
+                        default='mtime', choices=['mtime', 'hash'],
+                        help='for buildcloth runners, specifies which to use for testing dependency rebuilds.')
+
     parser.add_argument('--path', '-p', action='append',
                         default=[os.getcwd()])
     parser.add_argument('stages', nargs="*", action='store', default=None)
@@ -233,7 +239,7 @@ def main():
     ui = cli_ui()
 
     if ui.tool == 'buildc':
-        stages(ui.jobs, ui.stages, ui.file)
+        stages(ui.jobs, ui.stages, ui.file, ui.check)
     elif ui.tool.startswith('make'):
         make(ui.file)
     elif ui.too.startswith('ninja'):
