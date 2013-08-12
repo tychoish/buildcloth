@@ -77,7 +77,7 @@ class InvalidRule(BuildClothBaseError):
     "Raised when attempting to specify an impossible in :mod:`rules`."
     pass
 
-#################### Build Stages Errors ####################
+#################### Build Stage and System Errors ####################
 
 class BuildStagesError(BuildClothError):
     "Base error class for all build stage errors."
@@ -110,4 +110,13 @@ class StageRunError(BuildStagesError):
 class InvalidSystem(BuildStagesError):
     """Raised when attempting to manipulate build invalid BuildSystem
     objects."""
+    pass
+
+#################### Dependency Checking Errors ####################
+
+class DependencyCheckError(BuildClothError):
+    """
+    Raised after attempting to perform an impossible or incorrect dependency
+    rebuild check.
+    """
     pass

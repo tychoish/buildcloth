@@ -1,8 +1,9 @@
 from buildcloth.system import BuildSystem, BuildSystemGenerator
 from buildcloth.stages import BuildStage, BuildSequence, BuildSteps
+from buildcloth.dependency import DependencyChecks
 from buildcloth.err import InvalidStage, StageClosed, InvalidSystem, StageRunError
 from test.utils import dummy_function, dump_args_to_json_file, dump_args_to_json_file_with_newlines
-from unittest import TestCase
+from unittest import TestCase, skip
 import json
 import os 
 
@@ -73,7 +74,6 @@ class TestBuildSystem(TestCase):
         
     def test_vaidation_invalid_case(self):
         self.bs.add_stage(name='test', stage_type='seq')
-        print self.bs.stages
         valid = self.bs._validate_stage('test')
         self.assertFalse(valid)
         
@@ -369,7 +369,7 @@ class TestSystemRunPartLimits(ComplexSystem):
 
         if os.path.exists(self.fn_three):
             os.remove(self.fn_three)
-
+ 
         self.assertTrue(self.bs.run_part(2))
 
         self.assertTrue(os.path.exists(self.fn_two))
@@ -411,21 +411,39 @@ class TestBuildSystemGenerator(TestCase):
     def setUp(self):
         self.bsg = BuildSystemGenerator()
 
-    def test_inititation_funcs_empty(self):
+    def test_initiation_funcs_empty(self):
         self.assertEqual(self.bsg.funcs, {})
 
-    def test_inititation_funcs_initialized(self):
+    def test_initiation_funcs_initialized(self):
         func = { 'a': dummy_function }
         bs = BuildSystemGenerator(func)
         self.assertEqual(bs.funcs, func)
 
-    def test_inititation_funcs_initialized_tuple(self):
+    def test_initiation_funcs_initialized_tuple(self):
         func = ('a', dummy_function)
         bs = BuildSystemGenerator(func)
         self.assertEqual(bs.funcs, {})
 
-    def test_inititation_internal_stages(self):
+    def test_initiation_internal_stages(self):
         self.assertTrue(isinstance(self.bsg._stages, BuildSystem))
 
-    def test_inititation_empty_system(self):
+    def test_initiation_dependency_checking_object(self):
+        self.assertTrue(isinstance(self.bsg.check, DependencyChecks))
+
+    def test_initiation_empty_system(self):
         self.assertEqual(self.bsg.system, None)
+
+    def test_initiation_of_tree_structures(self):
+        self.assertTrue(isinstance(self.bsg._process_jobs, dict))
+        self.assertTrue(isinstance(self.bsg._process_tree, dict))
+
+    def test_initial_object_is_open(self):
+        self.assertFalse(self.bsg._final)
+
+    def test_check_method_correct_setting(self):
+        self.assertEqual(self.bsg.check.check, self.bsg.check_method)
+
+    @skip
+    def test_check_method_correct_value(self):
+        # skipped as this is probably an issue with DependencyChecks()
+        self.assertTrue(self.bsg.check_method in self.bsg.check.checks)

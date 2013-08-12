@@ -1,9 +1,11 @@
 from buildcloth.utils import is_function
 import inspect
 import hashlib
+import logging
+
+logger = logging.getLogger(__name__)
 
 class DependencyChecks(object):
-
 
     @property
     def check(self):
@@ -71,7 +73,7 @@ class DependencyChecks(object):
 
     @staticmethod
     def force(target, dependency):
-        pass
+        return True
 
     @staticmethod
     def hash(target, dependency):
@@ -88,4 +90,8 @@ class DependencyChecks(object):
             return self._hash(target, dependency)
 
     def check(self, target, dependency):
-        self.checks[self.check](target, dependency)
+        logger.debug('running dependency check ({0}), of target {1} on dependency {2}'.format(self.check, target, dependency))
+        test = self.checks[self.check](target, dependency)
+        logger.info('rebuild check {0} result: {1} for target {2}'.format(self.check, test, tareget))
+
+        return test
