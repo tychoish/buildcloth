@@ -89,13 +89,19 @@ class BuildSystem(object):
     @strict.setter
     def strict(self, value):
         logger.info('changing default object strictness setting.')
-        self._strict = value
+        if value in [ True, False]:
+            logger.info('changing default object strictness setting to: {0}'.format(value))
+            self._strict = value
+        else:
+            logger.warning('cannot set strict to: {0}, leaving strict at {1}'.format(value, self._strict))
 
     def close(self):
         "Sets the :attr:`~system.BuildSystem.open` value to ``False``."
         if self.open is True:
             logger.info('closing BuildSystem with stages: {0}'.format(self._stages))
             self.open = False
+        else:
+            logger.warning('cannot close BuildSystem a second time.')
 
     def _validate_stage(self, name):
         """
@@ -130,14 +136,17 @@ class BuildSystem(object):
         definitions that collide with stages and jobs in ``system``, the data in
         ``system`` wins.
         """
+        if isinstance(system, BuildSystem):
+            self.stages.update(system.stages)
+            
+            for job in system._stages:
+                self._stages.append(job)
+                logger.debug('extending system with: {0}'.format(job))
+        else:
+            logger.critical('cannot extend a BuildSystem with non-BuilSystem object.')
+            raise InvalidSystem
 
-        self.stages.update(system.stages)
-
-        for job in system._stages:
-            self._stages.append(job)
-            logger.debug('extending system with: {0}'.format(job))
-
-    def add_stage(self, name, stage=None, stage_type=None, strict=None):
+    def add_stage(self, name, stage=None, stage_type='stage', strict=None):
         """
         :param string name: The name of a stage.
 
@@ -145,9 +154,10 @@ class BuildSystem(object):
            to ``None``, which has the same effect as
            :meth:~system.BuildSystem.new_stage()`.
 
-        :param string stage_type: Either ``sequence`` (or ``seq``) or ``stage``
-           to determine what kind of :class`~stages.BuildSteps()` object to
-           instantiate if ``stage`` is ``None``
+        :param string stage_type: Defaults to ``stage``. Either ``sequence`` (or
+           ``seq``) or ``stage`` to determine what kind of
+           :class`~stages.BuildSteps()` object to instantiate if ``stage`` is
+           ``None``
 
         :param bool strict: Overrides the default
            :attr:`~system.BuildSystem.strict` attribute. When ``True``, prevents
@@ -183,67 +193,56 @@ class BuildSystem(object):
           if ``stage`` is not a :class`~stages.BuildSteps()` object.
         """
 
+        if stage is None and stage_type is 'stage':
+            stage = BuildStage()
+            logger.debug('created new (parallel) stage object')
+        elif stage is None and stage_type in ['seq', 'sequence']:
+            stage = BuildSequence()
+            logger.debug('created new sequence object.')
+        elif stage is None and stage_type not in ['stage', 'seq', 'sequence']:
+            logger.critical('no default stage object and no valid stage type named {0}.'.format(stage_type))
+            self._error_or_return(msg="must add a BuildSteps object to a build system.",
+                                  exception=InvalidStage,
+                                  strict=strict)
+        if isinstance(stage, BuildSteps) is False:
+            logger.critical('{0} is not a build step object'.format(name))
+            self._error_or_return(msg="must add a BuildSteps object to a build system.",
+                                  exception=InvalidStage,
+                                  strict=strict)
+        else: 
+            logger.info('appending well formed stage.')
+            self._stages.append(name)
+            self.stages[name] = stage
+
+            return True
+
+    def _error_or_return(self, msg, strict=None, exception=None): 
+        """
+        :param str msg: A description of the exception.
+
+        :param bool strict: Optional. Defaults to :attr:`~system.BuildSystem.strict`
+
+        :param exception exc: Optional. The exception to raise. Defaults to :exc:`~err.InvalidSystem`
+
+        :raises: :exc:`~err.InvalidStage` if ``strict`` is ``True``, otherwise, returns False.
+        """
         if strict is None:
-            logger.info('defaulting to default object strictness value {0}'.format(self.strict))
             strict = self.strict
+            logger.info('defaulting to default object strictness value {0}'.format(self.strict))
+
+        if exception is None:
+            exception = InvalidSystem
+
+        logger.info('strict value currently: {0}'.format(strict))
+
+        logger.debug(msg)
+
+        if strict is True:
+            logger.critical('in strict mode, raising exception.')
+            raise exception("must add a BuildSteps object to a build system.")
         else:
-            logger.info('strict value currently: {0}'.format(strict))
-
-        # add duplicate item to stage if: not strict, it already exists, and
-        # stage arg is none:
-        if self._validate_stage(name) is False:
-            if not strict:
-                if stage is None:
-                    self._stages.append(name)
-                    logger.debug('added duplicate stage named {0}'.format(name))
-                else:
-                    logger.critical('exception: stage name {0} already exists'.format(name))
-                    raise InvalidStage("can't add duplicate stages with new jobs'")
-        else: # stage does not already exist
-            logger.debug('stage name {0} does not exist, continuing'.format(name))
-            if stage is None and stage_type is None:
-                logger.warning('stage {0} is empty no type is specified.'.format(name))
-                # error case, stages must have a type
-                if strict is True:
-                    logger.critical('in strict mode, raising exception.')
-                    raise InvalidStage("New stages must have a type")
-                elif strict is False:
-                    logger.warning('in permissive mode; aborting, returning early.')
-                    return False
-            elif stage is None and stage_type is not None:
-                # add blanks if needed
-                logger.info('adding a blank stage named "{0}"'.format(name))
-                if stage_type.startswith('seq'):
-                    logger.debug('adding a build sequence stage.')
-                    stage = BuildSequence()
-                elif stage_type.startswith('stage'):
-                    stage = BuildStage()
-                    logger.debug('adding a parallel build stage stage.')
-                else:
-                    logger.critical('no stage type available named {0}'.format(stage_type))
-                    if strict is True:
-                        logger.critical('in strict mode, raising exception.')
-                        raise InvalidStage("New stages must have a type")
-                    else:
-                        logger.warning('in permissive mode; aborting, returning early.')
-                        return False
-            else:
-                # add stage as specified.
-                if isinstance(stage, BuildSteps) is False:
-                    logger.critical('{0} is not a build step object'.format(name))
-                    if strict is True:
-                        logger.critical('in strict mode, raising exception.')
-                        raise InvalidStage("must add a BuildSteps object to a build system.")
-                    else:
-                        logger.warning('in permissive mode; aborting, returning early.')
-                        return False
-
-                # if we get here it's safe to add things
-                logger.info('appending well formed stage.')
-                self._stages.append(name)
-                self.stages[name] = stage
-
-                return True
+            logger.warning('in permissive mode; aborting, returning early.')
+            return False
 
     def get_order(self):
         """
@@ -281,10 +280,7 @@ class BuildSystem(object):
            and ``False`` otherwise.
         """
 
-        if name in self._stage:
-            return True
-        else:
-            return False
+        return name in self.stages
 
     def run_stage(self, name, strict=None):
         """
@@ -304,14 +300,10 @@ class BuildSystem(object):
 
         Runs a single stage from the :class:~system.BuildSystem` object.
         """
-        if strict is None:
-            strict = self.strict
-
         if name not in self.stages:
-            if strict is True:
-                raise StageRunError("Stage must exist to run.")
-            else:
-                return False
+            self._error_or_return(msg='Stage must exist to run',
+                                  exception=StageRunError,
+                                  strict=strict)
         else:
             self.stages[name].run(strict)
             return True
@@ -325,9 +317,17 @@ class BuildSystem(object):
         :raises: :exc:`~err.StageRunError` if ``strict`` is ``True`` and
            :attr:`~system.BuildSystem.open` is ``True``.
 
+        :returns: The return value of the *last* ``run()`` method called.
+    
         Calls the :meth:`~stages.BuildSteps.run()` method of each stage object
         until the ``idx``\ :sup:`th` item of the.
         """
+
+
+        if idx > len(self._stages) or idx < 0:
+            return self._error_or_return(msg='job at index {0} does not exist'.format(idx),
+                                         exception=StageRunError,
+                                         strict=strict)
 
         if strict is None:
             logger.debug('defaulting to object default strict mode.')
@@ -339,8 +339,15 @@ class BuildSystem(object):
         else:
             for job in self._stages[:idx]:
                 logger.info('running build stage {0}'.format(job))
-                self.stages[job].run()
+                ret = self.stages[job].run()
                 logger.info('completed build stage {0}'.format(job))
+
+                if ret is False:
+                    msg = 'job {0} failed, stopping and returning False'.format(idx)
+                    logger.critical(msg)
+                    return self._error_or_return(msg=msg, exception=StageRunError, strict=strict)
+            
+            return ret
 
     def run(self, strict=None):
         """
@@ -352,7 +359,11 @@ class BuildSystem(object):
         Calls the :meth:`~stages.BuildSteps.run()` method of each stage object.
         """
         logger.info('running entire build system')
-        self.run_part(idx=self.count() - 1, strict=strict)
+        ret = self.run_part(idx=self.count(), strict=strict)
+
+        logger.debug('return value for stage: {0}'.format(ret))
+        
+        return ret
 
 class BuildSystemGenerator(object):
     """

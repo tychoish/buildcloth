@@ -28,7 +28,7 @@ allows you to specify two basic relationships between tasks:
    concurrently. Provided by :class:`~stages.BuildStage()`.
 
 *Stage*
-   A series of tasks that may e
+   A series of tasks that may execute in parallel.
 
 :class:`~stages.BuildSequence()` and :class:`~stages.BuildStage()` share the
 same base class (:class:`~stages.BuildSteps()`) and have a common interface
@@ -282,6 +282,8 @@ class BuildStage(BuildSteps):
            value, which is typically the number of CPU cores your system has.
 
         Runs all jobs in :attr:~stages.BuildSteps.stages` using a worker pool.
+
+        :returns: ``True`` upon completion.
         """
 
         if workers is None:
@@ -302,12 +304,15 @@ class BuildStage(BuildSteps):
         logger.info('now waiting for jobs to finish.')
         p.join()
         logger.debug('completed worker pool for stage.')
+        return True
 
 
 class BuildSequence(BuildSteps):
     """
     A subclass of :class:~stages.BuildSteps` that executes jobs in the order
     they were added to the :class:~stages.BuildSteps` object.
+
+    :returns: ``True`` upon completion.
     """
 
     def run(self, *args, **kwargs):
@@ -318,3 +323,5 @@ class BuildSequence(BuildSteps):
         for job in self.stage:
             logger.info('running {0}'.format(job[0].__name__))
             job[0](*job[1])
+
+        return True
