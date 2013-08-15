@@ -22,8 +22,10 @@ produce a build system and provide the foundation of the command-line build
 system tool :ref:`buildc`.
 """
 
+import subprocess
 import json
 import logging
+import os.path
 
 from buildcloth.err import InvalidStage, StageClosed, StageRunError, InvalidJob, InvalidSystem
 from buildcloth.tsort import topological_sort
@@ -138,7 +140,7 @@ class BuildSystem(object):
         """
         if isinstance(system, BuildSystem):
             self.stages.update(system.stages)
-            
+
             for job in system._stages:
                 self._stages.append(job)
                 logger.debug('extending system with: {0}'.format(job))
@@ -209,14 +211,14 @@ class BuildSystem(object):
             self._error_or_return(msg="must add a BuildSteps object to a build system.",
                                   exception=InvalidStage,
                                   strict=strict)
-        else: 
+        else:
             logger.info('appending well formed stage.')
             self._stages.append(name)
             self.stages[name] = stage
 
             return True
 
-    def _error_or_return(self, msg, strict=None, exception=None): 
+    def _error_or_return(self, msg, strict=None, exception=None):
         """
         :param str msg: A description of the exception.
 
@@ -318,7 +320,7 @@ class BuildSystem(object):
            :attr:`~system.BuildSystem.open` is ``True``.
 
         :returns: The return value of the *last* ``run()`` method called.
-    
+
         Calls the :meth:`~stages.BuildSteps.run()` method of each stage object
         until the ``idx``\ :sup:`th` item of the.
         """
@@ -346,7 +348,7 @@ class BuildSystem(object):
                     msg = 'job {0} failed, stopping and returning False'.format(idx)
                     logger.critical(msg)
                     return self._error_or_return(msg=msg, exception=StageRunError, strict=strict)
-            
+
             return ret
 
     def run(self, strict=None):
@@ -362,7 +364,7 @@ class BuildSystem(object):
         ret = self.run_part(idx=self.count(), strict=strict)
 
         logger.debug('return value for stage: {0}'.format(ret))
-        
+
         return ret
 
 class BuildSystemGenerator(object):
@@ -504,21 +506,54 @@ class BuildSystemGenerator(object):
                     logger.info('added stages tasks to build system.')
 
             self.system.close()
+            self._final = True
 
         else:
             logger.critical('cannot finalize object')
-            raise InvalidBuildSystem
+            raise InvalidSystem
 
     @staticmethod
     def process_strings(spec, strings):
-        if not strings:
-            return spec
-        else:
-            for k, v  in spec.items():
-                if '{' in v:
-                    spec[k] = v.format(strings)
+        """
+        :param string spec: A string, possibly with ``format()`` style tokens in curly braces.
 
+        :param dict strings: A mapping of strings to replacement values.
+
+        :raises: :exc:`python:TypeError` if ``strings`` is not a dict *and*
+           there may be a replacement string.
+        """
+
+        if strings is None:
             return spec
+        elif not isinstance(strings, dict):
+            logger.critical('replacement content must be a dictionary.')
+            raise TypeError
+
+        if isinstance(spec, dict):
+            out = {}
+            for k, v in spec.items():
+                if '{' in v and '}' in v:
+                    try:
+                        out[k] = v.format(**strings)
+                    except KeyError, e:
+                        msg = '{0} does not have {1} suitable replacement keys.'.format(strings, e)
+                        logger.critical(msg)
+                        raise InvalidJob(msg)
+                else:
+                    out[k] = v
+            print 'here', out
+            return out
+        else:
+            if '{' in spec and '}' in spec:
+                try:
+                    spec = spec.format(**strings)
+                except KeyError, e:
+                    msg = '{0} does not have {1} suitable replacement keys.'.format(spec, e)
+                    logger.critical(msg)
+                    raise InvalidJob(msg)
+                return spec
+            else:
+                return spec
 
     @staticmethod
     def generate_job(spec, funcs):
@@ -540,12 +575,22 @@ class BuildSystemGenerator(object):
             args = spec['args']
         elif isinstance(spec['args'], list):
             args = tuple(spec['args'])
-        elif isisntance(spec['args'], tuple):
+        elif isinstance(spec['args'], tuple):
             args = spec['args']
         else:
-            raise InvalidStage('args are malformed.')
+            raise InvalidJob('args are malformed.')
 
-        return funcs[spec['job']], args
+        if is_function(spec['job']):
+            action = spec['job']
+        else:
+            try:
+                action = funcs[spec['job']]
+            except KeyError:
+                msg = "{0} not in function specification with: {0} keys".format(spec['job'], funcs.keys())
+                logger.critical(msg)
+                raise InvalidJob(msg)
+
+        return action, args
 
     @staticmethod
     def generate_shell_job(spec):
@@ -559,15 +604,17 @@ class BuildSystemGenerator(object):
         Takes a ``spec`` dict and returns a tuple to define a task.
         """
 
-        import subprocess
-
         if isinstance(spec['cmd'], list):
             cmd_str = spec['cmd']
         else:
             cmd_str = spec['cmd'].split()
 
         if isinstance(spec['dir'], list):
-            spec['dir'] = os.path.sep.join(spec['dir'])
+            base_path = os.path.sep.join(spec['dir'])
+            if spec['dir'][0].startswith(os.path.sep):
+                spec['dir'] = base_path
+            else:
+                spec['dir'] = os.path.abspath(base_path)
 
         if isinstance(spec['args'], list):
             cmd_str.extend(spec['args'])
@@ -596,18 +643,18 @@ class BuildSystemGenerator(object):
 
         sequence = BuildSequence()
 
-        if 'task' not in spec and not isinstance(task['spec'], list):
+        if 'tasks' not in spec or not isinstance(spec['tasks'], list):
             raise InvalidStage
         else:
             for task in spec['tasks']:
                 if 'job' in task:
-                    job, args = _generate_yaml_build_job(task, funcs)
+                    job, args = BuildSystemGenerator.generate_job(task, funcs)
                 elif 'cmd' in task:
-                    job, args = _generate_shell_build_job(task)
+                    job, args = BuildSystemGenerator.generate_shell_job(task)
 
                 sequence.add(job, args)
 
-                sequence.close()
+            sequence.close()
 
             return sequence
 
@@ -627,7 +674,7 @@ class BuildSystemGenerator(object):
             raise InvalidJob("{0} is not callable.".format(func))
 
         logger.debug('adding task named {0}'.format(name))
-        self.func[name] = func
+        self.funcs[name] = func
 
     def ingest_yaml(self, filename, strings=None):
         """
@@ -686,7 +733,7 @@ class BuildSystemGenerator(object):
         except IOError:
             logger.warning('file {0} does not exist'.format(filename))
 
-    def _process_stage(self, spec, spec_keys, strings=None):
+    def _process_stage(self, spec, spec_keys=None, strings=None):
         """
         :param dict spec: The task specification imported from user input.
 
@@ -707,24 +754,30 @@ class BuildSystemGenerator(object):
         - :meth:`~system.BuildSystemGenerator.generate_sequence()`.
         """
 
-        spec_keys = set(spec.keys())
+        if spec_keys is None:
+            spec_keys = set(spec.keys())
+        elif isinstance(spec_keys, set):
+            logger.debug('using {0} for spec_keys as an optimization'.format(spec_keys))
+        else:
+            logger.error('spec_keys argument {0} must be a set'.format(spec_keys))
+            raise InvalidJob('problem with spec_keys')
 
-        if self.funcs and spec_keys.issuperset(set('job', 'args', 'stage')):
+        if self.funcs and spec_keys.issuperset(set(['job', 'args', 'stage'])):
             logger.debug('spec looks like a pure python job, processing now.')
             spec = self.process_strings(spec, strings)
             return self.generate_job(spec, self.funcs)
-        elif spec_keys.issuperset(set('dir', 'cmd', 'args', 'stage')):
+        elif spec_keys.issuperset(set(['dir', 'cmd', 'args', 'stage'])):
             logger.debug('spec looks like a shell job, processing now.')
             spec = self.process_strings(spec, strings)
             return self.generate_shell_job(spec)
-        elif self.funcs and spec_keys.issuperset(set('stage', 'tasks')):
+        elif self.funcs and spec_keys.issuperset(set(['stage', 'tasks'])):
             logger.debug('spec looks like a shell job, processing now.')
             spec = self.process_strings(spec, strings)
             task_sequence = self.generate_sequence(spec, self.funcs)
             return task_sequence.run, None
         else:
             logger.critical('spec does not match existing job type, returning early')
-            raise InvalidJob
+            raise InvalidJob('invalid job type error')
 
     @staticmethod
     def get_dependency_list(spec):
