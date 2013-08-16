@@ -853,3 +853,51 @@ class TestBuildSystemGenerator(TestCase):
 
     # TODO tests for ingest_yaml
     # TODO tests for ingest_json
+
+    def test_dependency_string_full_name(self):
+        spec = { 'dependency': 'a b c d',
+                 'target': '/tmp/files',
+                 'msg': 'alpha' }
+        expected = [ 'a', 'b', 'c', 'd' ]
+
+        self.assertEqual(self.bsg.get_dependency_list(spec), expected)
+
+    def test_dependency_string_shortest(self):
+        spec = { 'dep': 'a b c d',
+                 'target': '/tmp/files',
+                 'msg': 'alpha' }
+        expected = [ 'a', 'b', 'c', 'd' ]
+
+        self.assertEqual(self.bsg.get_dependency_list(spec), expected)
+
+    def test_dependency_string_short_alt(self):
+        spec = { 'deps': 'a b c d',
+                 'target': '/tmp/files',
+                 'msg': 'alpha' }
+        expected = [ 'a', 'b', 'c', 'd' ]
+
+        self.assertEqual(self.bsg.get_dependency_list(spec), expected)
+
+    def test_dependency_list_full_name(self):
+        spec = { 'dependency': ['a', 'b', 'c', 'd'],
+                 'target': '/tmp/files',
+                 'msg': 'alpha' }
+        expected = [ 'a', 'b', 'c', 'd' ]
+
+        self.assertEqual(self.bsg.get_dependency_list(spec), expected)
+
+    def test_dependency_list_shortest(self):
+        spec = { 'dep': ['a', 'b', 'c', 'd'],
+                 'target': '/tmp/files',
+                 'msg': 'alpha' }
+        expected = [ 'a', 'b', 'c', 'd' ]
+
+        self.assertEqual(self.bsg.get_dependency_list(spec), expected)
+
+    def test_dependency_list_short_alt(self):
+        spec = { 'deps': ['a', 'b', 'c', 'd'],
+                 'target': '/tmp/files',
+                 'msg': 'alpha' }
+        expected = [ 'a', 'b', 'c', 'd' ]
+
+        self.assertEqual(self.bsg.get_dependency_list(spec), expected)

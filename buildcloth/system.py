@@ -535,19 +535,18 @@ class BuildSystemGenerator(object):
                 if '{' in v and '}' in v:
                     try:
                         out[k] = v.format(**strings)
-                    except KeyError, e:
+                    except KeyError as e:
                         msg = '{0} does not have {1} suitable replacement keys.'.format(strings, e)
                         logger.critical(msg)
                         raise InvalidJob(msg)
                 else:
                     out[k] = v
-            print 'here', out
             return out
         else:
             if '{' in spec and '}' in spec:
                 try:
                     spec = spec.format(**strings)
-                except KeyError, e:
+                except KeyError as e:
                     msg = '{0} does not have {1} suitable replacement keys.'.format(spec, e)
                     logger.critical(msg)
                     raise InvalidJob(msg)
@@ -787,11 +786,11 @@ class BuildSystemGenerator(object):
         :returns: A list that specifies all specified dependencies of that task.
         """
 
-        try:
-            dependency = spec['dep']
-        except KeyError:
+        if 'dependency' in spec:
             dependency = spec['dependency']
-        except KeyError:
+        elif 'dep' in spec:
+            dependency = spec['dep']
+        elif 'deps' in spec:
             dependency = spec['deps']
         else:
             logger.warning('no dependency in {0} spec'.format(spec['target']))
