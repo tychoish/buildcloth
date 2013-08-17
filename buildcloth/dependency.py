@@ -45,15 +45,15 @@ class DependencyChecks(object):
             self.check = members[0][0]
 
     @property
-    def check(self):
-        return self._check
+    def check_method(self):
+        return self.check
 
-    @check.setter
-    def check(self, value):
-        if check is None:
-            self._check = 'mtime'
-        elif check in self.checks:
-            self._check = check
+    @check_method.setter
+    def check_method(self, value):
+        if self.check is None:
+            self.check = 'mtime'
+        elif self.check in self.checks:
+            self.check = value
         else:
             raise Exception
 

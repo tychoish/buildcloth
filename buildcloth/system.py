@@ -444,14 +444,14 @@ class BuildSystemGenerator(object):
 
     @property
     def check_method(self):
-        return self.check.check
+        return self.check.check_method
 
     @check_method.setter
     def check_method(self, value):
         if value not in self.check.checks:
             pass
         else:
-            self.check.check = value
+            self.check.check_method = value
 
     def finalize(self):
         """
@@ -483,13 +483,18 @@ class BuildSystemGenerator(object):
                     raise InvalidSystem
 
             elif len(self._process_tree) > 0:
-                self.system = BuildSystem()
+                self.system = BuildSystem(self._stages)
 
                 self._process = topological_sort(self._process_tree)
                 logger.debug('successfully sorted dependency tree.')
 
+                total = len(self._process)
                 rebuilds_needed = False
+                idx = -1
+                stack = []
                 for i in self._process:
+                    idx += 1
+
                     if rebuilds_needed is False and self._process_jobs[i][1] is True:
                         logger.deug('{0}: needs rebuild.'.format(i))
                         rebuilds_needed = True
@@ -497,9 +502,47 @@ class BuildSystemGenerator(object):
                         logger.debug('{0}: does not need a rebuild, passing'.format(i))
                         continue
 
-                    if rebuilds_needed is True:
-                        logger.debug('{0}: adding to rebuild queue'.format(i))
-                        self.system.add_stage(i, self._process_jobs[i][0][0], self._process_jobs[i][0][1])
+                    # rebuild needed here.
+                    if idx == total:
+                        # last task in tree.
+                        if stack:
+                            # if there are non dependent items in the stack, we
+                            # might as well add the current task there.
+                            stack.append(i)
+                        else:
+                            # if there's no stack, we'll just add the task directly.
+                            pass
+                    elif idx + 1 <= total and i not in self._process_tree[self._process[idx+1]]:
+                        stack.append(i)
+                    else:
+                        if i not in self._process_tree[self._process[idx+1]]:
+                            stack.append(i)
+                            logger.debug('adding task {0} to queue not continuing.'.format(i))
+                            continue
+                        else:
+                            # here the previous stack doesn't depend on the
+                            # current task. add current task to stack then build
+                            # the stack in parallel.
+
+                            stack.append(i)
+                            logger.debug('adding task to the stage queue, but not continuing'.format(i))
+
+                    if rebuilds_needed is True: # (and the loop gets to this point)
+                        self.system.new_stage(i)
+                        if stack:
+                            for job in stack:
+                                self.system.stages[i].add(self._process_jobs[job][0][0],
+                                                          self._process_jobs[job][0][1])
+                            stack = []
+                        else:
+                            logger.debug('{0}: adding to rebuild queue'.format(i))
+                            self.system.stages[i].add(self._process_jobs[i][0][0],
+                                                      self._process_jobs[i][0][1])
+                    elif rebuilds_needed is False and idx == total:
+                        logger.critical('no rebuild needed of dependent tasks.')
+                    else:
+                        logger.error('error parsing the dependency tree.')
+                        raise InvalidSystem
 
                 if self._stages.count() > 0:
                     self.system.extend(self._stages)
@@ -806,11 +849,10 @@ class BuildSystemGenerator(object):
         :param dict spec: The task specification imported from user input.
 
         Wraps :meth:`~system.BuildSystemGenerator._process_stage()` and
-        additionally modifies the internal strucutres associated with the
+        modifies the internal strucutres associated with the
         dependency tree.
         """
-
-        job = _process_stage(spec)
+        job = self._process_stage(spec)
         dependencies = self.get_dependency_list(spec)
 
         if self.check.check(spec['target'], dependencies) is True:
@@ -825,7 +867,6 @@ class BuildSystemGenerator(object):
         logger.debug('added {0} to dependency graph'.format(spec['target']))
         self._process_tree[spec['target']] = self.get_dependency_list(spec)
 
-
     def _process_job(self, spec):
         """
         :param dict spec: A dictionary of strings that describe a build job.
@@ -834,9 +875,21 @@ class BuildSystemGenerator(object):
         to the build system.
         """
 
+        if 'dependency' in 'dep' in spec or 'deps' in spec:
+            has_dep = True
+        else:
+            has_dep = False
+
+        if has_dep is True and 'stage' in spec and 'target' in spec:
+            logger.error('{0} cannot have both a stage and spec identifier'.format(spec))
+            raise InvalidJob('stage cannot have "stage" and "target".')
+        elif has_dep is True and ('stage' in spec and not 'target' in spec):
+            spec['target'] = spec['stage']
+            del spec['stage']
+
         # make sure there's a dependency
         if 'target' in spec:
-            if 'dep' not in spec or 'dependency' not in spec:
+            if has_dep:
                 # put this into the BuildSystem stage to run after the dependency tree.
                 spec['stage'] = '__nodep'
 
@@ -847,7 +900,7 @@ class BuildSystemGenerator(object):
                 logger.debug('removing target key from spec: {0}'.format(spec['target']))
                 del spec['target']
             else:
-                _process_dependency(spec)
+                self._process_dependency(spec)
                 logger.debug('added task to build {0}'.foramt(spec['target']))
                 return True
 
@@ -855,11 +908,11 @@ class BuildSystemGenerator(object):
             logger.warning('job lacks stage name, adding one to "{1}", please correct.'.format(spec))
             spec['stage'] = '__unspecified'
 
-        job = _process_stage(spec)
+        job = self._process_stage(spec)
 
-        if not self.system.stage_exists(spec['stage']):
+        if not self._stages.stage_exists(spec['stage']):
             logger.debug('creating new stage named {0}'.format(spec['stage']))
-            self.system.new_stage(spec['stage'])
+            self._stages.new_stage(spec['stage'])
 
         self._stages.stages[spec['stage']].add(job[0], job[s1])
         logger.debug('added job to stage: {0}'.format(spec['stage']))
