@@ -25,6 +25,13 @@ testpy3:$(wildcard $(modsrc)*.py)
 testpypy:$(wildcard $(modsrc)*.py)
 	@. /usr/bin/virtualenvwrapper.sh; workon pypy; pypy test.py
 	@echo [test]: PyPy tests complete.
+devtest:nose2 nose3
+
+nose2:
+	nosetests2 -v
+nose3:
+	nosetests3 -v
+
 
 $(output)/: 
 	@mkdir $@

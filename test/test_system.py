@@ -383,29 +383,29 @@ class TestSystemRunPartLimits(ComplexSystem):
         self.assertTrue(self.bs.run_part(self.bs.count()))
 
 class TestSystemRunAllTestOutput(ComplexSystem):
+    def result_assertion(self, fn, result):
+        self.assertEqual([ item.items() for item in self.unwind_json_from_outputs(fn)].sort(),
+                         [ item.items() for item in result].sort())
+
     def test_output_one(self):
         self.bs.close()
         self.assertTrue(self.bs.run())
-        self.assertEqual(self.unwind_json_from_outputs(self.fn_one),
-                         [self.a, self.b, self.d, self.c])
+        self.result_assertion(self.fn_one, [self.a, self.b, self.d, self.c])
 
     def test_output_two(self):
         self.bs.close()
         self.assertTrue(self.bs.run())
-        self.assertEqual(self.unwind_json_from_outputs(self.fn_two),
-                         [self.a, self.b, self.c, self.d])
+        self.result_assertion(self.fn_two, [self.a, self.b, self.c, self.d])
 
     def test_output_three(self):
         self.bs.close()
         self.assertTrue(self.bs.run())
-        self.assertEqual(self.unwind_json_from_outputs(self.fn_three),
-                         [self.c, self.b, self.a, self.d])
+        self.result_assertion(self.fn_three, [self.c, self.b, self.a, self.d])
 
     def test_output_four(self):
         self.bs.close()
         self.assertTrue(self.bs.run())
-        self.assertEqual(self.unwind_json_from_outputs(self.fn_four),
-                         [self.a, self.a, self.a, self.b])
+        self.result_assertion(self.fn_four, [self.a, self.a, self.a, self.b])
 
 class TestBuildSystemGeneratorShellJob(TestCase):
     @classmethod
@@ -611,7 +611,7 @@ class TestBuildGeneratorProcessStageSpecs(TestCase):
 
         ret = self.bsg._process_stage(spec)
         expected = (self.bsg.generate_sequence(spec, self.funcs).run, None)
-        self.assertEqual(str(ret)[:-12], str(expected)[:-12])
+        self.assertEqual(str(ret)[:-18], str(expected)[:-18])
 
     def test_process_stage_task_sequence_replacement(self):
         spec = { 'stage': 'test',
@@ -631,7 +631,7 @@ class TestBuildGeneratorProcessStageSpecs(TestCase):
         ex_spec = self.bsg.process_strings(spec, self.strings)
         ret = self.bsg._process_stage(spec, strings=self.strings)
         expected = (self.bsg.generate_sequence(ex_spec, self.funcs).run, None)
-        self.assertEqual(str(ret)[:-12], str(expected)[:-12])
+        self.assertEqual(str(ret)[:-18], str(expected)[:-18])
 
     def test_invalid_spec(self):
         spec = { 'is': 'is not',
@@ -639,7 +639,6 @@ class TestBuildGeneratorProcessStageSpecs(TestCase):
 
         with self.assertRaises(InvalidJob):
             self.bsg._process_stage(spec)
-
 
     def test_invalid_spec_with_keys(self):
         spec_keys = set(['stage', 'task'])
@@ -901,3 +900,23 @@ class TestBuildSystemGenerator(TestCase):
         expected = [ 'a', 'b', 'c', 'd' ]
 
         self.assertEqual(self.bsg.get_dependency_list(spec), expected)
+
+    def test_process_job_with_stage_and_target(self):
+        spec = {
+            'target': 'other',
+            'dependency': 'string',
+            'job': 'dumb',
+            'args': None,
+            'stage': 'one',
+        }
+
+        with self.assertRaises(InvalidJob):
+            self.bsg._process_job(spec)
+
+
+    def test_process_dependency(self):
+        self.bsg.check.check = 'force'
+        spec = { 'deps': ['a', 'b', 'c', 'd'],
+                 'target': '/tmp/files',
+                 'msg': 'alpha' }
+
