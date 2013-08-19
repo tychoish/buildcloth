@@ -89,3 +89,6 @@ def topological_sort(graph):
                 component_graph[node_c].append(successor_c)
 
     return _topological_sort(component_graph)
+
+def tsort(graph):
+    return [i[0] for i in topological_sort(graph) ]

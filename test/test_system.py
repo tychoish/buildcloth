@@ -711,7 +711,7 @@ class TestBuildSystemGenerator(TestCase):
         self.assertFalse(self.bsg._final)
 
     def test_check_method_correct_setting(self):
-        self.assertEqual(self.bsg.check.check, self.bsg.check_method)
+        self.assertEqual(self.bsg.check._check, self.bsg.check_method)
 
     def test_check_method_correct_value(self):
         self.assertTrue(self.bsg.check_method in self.bsg.check.checks)
@@ -728,16 +728,6 @@ class TestBuildSystemGenerator(TestCase):
         self.bsg.check_method = 'hash'
         self.assertNotEqual(o, self.bsg.check_method)
 
-    def test_finalize_on_empty(self):
-        with self.assertRaises(InvalidSystem):
-            self.bsg.finalize()
-
-    def test_finalize_second_time(self):
-        self.bsg._final = True
-        with self.assertRaises(InvalidSystem):
-            self.bsg.finalize()
-
-    ## TODO test job ordering in finalize()
 
     def test_process_strings_no_token(self):
         string = 'this string has no replacement tokens'
@@ -913,10 +903,311 @@ class TestBuildSystemGenerator(TestCase):
         with self.assertRaises(InvalidJob):
             self.bsg._process_job(spec)
 
+    def test_process_dependency_list(self):
+        self.assertEqual(self.bsg._process_jobs, {})
+        self.assertEqual(self.bsg._process_tree, {})
 
-    def test_process_dependency(self):
-        self.bsg.check.check = 'force'
+        self.bsg.check.check_method = 'force'
+
         spec = { 'deps': ['a', 'b', 'c', 'd'],
-                 'target': '/tmp/files',
+                 'stage': 'test',
+                 'target': '/tmp/files0',
+                 'dir': '/tmp',
+                 'cmd': 'touch',
+                 'args': ['a', 'b'],
                  'msg': 'alpha' }
 
+        self.bsg._process_dependency(spec)
+        self.assertEqual(spec['deps'], self.bsg._process_tree[spec['target']])
+
+    def test_process_dependency_string(self):
+        self.assertEqual(self.bsg._process_jobs, {})
+        self.assertEqual(self.bsg._process_tree, {})
+
+        self.bsg.check.check_method = 'force'
+
+        spec = { 'deps': 'a b c d',
+                 'stage': 'test',
+                 'target': '/tmp/files1',
+                 'dir': '/tmp',
+                 'cmd': 'touch',
+                 'args': ['a', 'b'],
+                 'msg': 'alpha' }
+
+        self.bsg._process_dependency(spec)
+        self.assertEqual(spec['deps'].split(),
+                         self.bsg._process_tree[spec['target']])
+
+    def test_process_dependency_rebuild_needed(self):
+        self.assertEqual(self.bsg._process_jobs, {})
+        self.assertEqual(self.bsg._process_tree, {})
+
+        self.bsg.check.check_method = 'force'
+
+        spec = { 'deps': 'a b c d',
+                 'stage': 'test',
+                 'target': '/tmp/files2',
+                 'dir': '/tmp',
+                 'cmd': 'touch',
+                 'args': ['a', 'b'],
+                 'msg': 'alpha' }
+
+        self.bsg._process_dependency(spec)
+        self.assertTrue(self.bsg._process_jobs[spec['target']][1])
+
+    def test_process_dependency_rebuild_not_needed(self):
+        self.assertEqual(self.bsg._process_jobs, {})
+        self.assertEqual(self.bsg._process_tree, {})
+
+        self.bsg.check.check_method = 'ignore'
+
+        spec = { 'deps': 'a b c d',
+                 'stage': 'test',
+                 'target': '/tmp/files3',
+                 'dir': '/tmp',
+                 'cmd': 'touch',
+                 'args': ['a', 'b'],
+                 'msg': 'alpha' }
+
+        self.bsg._process_dependency(spec)
+        self.assertFalse(self.bsg._process_jobs[spec['target']][1])
+
+    def test_job_processing_dep_target(self):
+        spec = { 'target': '/tmp/files3',
+                 'dependency': ['a', 'b'],
+                 'dir': '/tmp',
+                 'cmd': 'touch',
+                 'args': ['a', 'b'],
+                 'msg': 'alpha' }
+
+        self.assertTrue(self.bsg._process_job(spec))
+
+    def test_job_processing_no_dep_target(self):
+        spec = { 'target': '/tmp/files3',
+                 'dir': '/tmp',
+                 'cmd': 'touch',
+                 'args': ['a', 'b'],
+                 'msg': 'alpha' }
+
+        self.assertTrue(self.bsg._process_job(spec))
+
+    def test_job_processing_dep_stage(self):
+        spec = { 'stage': '/tmp/files3',
+                 'dependency': ['a', 'b'],
+                 'dir': '/tmp',
+                 'cmd': 'touch',
+                 'args': ['a', 'b'],
+                 'msg': 'alpha' }
+
+        self.assertTrue(self.bsg._process_job(spec))
+
+    def test_job_processing_no_dep_stage(self):
+        spec = { 'stage': '/tmp/files3',
+                 'dir': '/tmp',
+                 'cmd': 'touch',
+                 'args': ['a', 'b'],
+                 'msg': 'alpha' }
+
+        self.assertTrue(self.bsg._process_job(spec))
+
+    def test_job_processing_invalid_with_stage_and_target(self):
+        spec = { 'stage': 'test',
+                 'target': '/tmp/files3',
+                 'dependency': ['a', 'b'],
+                 'dir': '/tmp',
+                 'cmd': 'touch',
+                 'args': ['a', 'b'],
+                 'msg': 'alpha' }
+
+        with self.assertRaises(InvalidJob):
+            self.bsg._process_job(spec)
+
+class TestBuildSystemGeneratorFinalize(TestCase):
+    @classmethod
+    def setUp(self):
+        self.bsg = BuildSystemGenerator()
+
+    def test_add_tasks_to_stage_invalid(self):
+        self.assertEqual(None, self.bsg._add_tasks_to_stage(False, 1, 3, {'a': 'b'}, ['a', 'b']))
+
+    def test_finalize_on_empty(self):
+        self.assertFalse(self.bsg._final)
+        self.assertEqual(None, self.bsg.system)
+        with self.assertRaises(InvalidSystem):
+            self.bsg.finalize()
+
+    def test_finalize_second_time(self):
+        self.bsg._final = True
+        with self.assertRaises(InvalidSystem):
+            self.bsg.finalize()
+
+    def test_finalize_with_non_clean_system(self):
+        self.assertFalse(self.bsg._final)
+        self.assertEqual(None, self.bsg.system)
+        self.bsg.system = True
+        with self.assertRaises(InvalidSystem):
+            self.bsg.finalize()
+
+
+    def test_final_toggles_final_state(self):
+        self.assertFalse(self.bsg._final)
+
+        self.bsg._process_job({
+            'stage': 'test0',
+            'dir': '/tmp',
+            'cmd': 'touch',
+            'args': ['a', 'b']
+        })
+
+        self.bsg.finalize()
+        self.assertTrue(self.bsg._final)
+
+    def test_final_creates_build_system_object(self):
+        self.assertFalse(self.bsg._final)
+
+        self.bsg._process_job({
+            'stage': 'test0',
+            'dir': '/tmp',
+            'cmd': 'touch',
+            'args': ['a', 'b']
+        })
+
+        self.bsg.finalize()
+        self.assertTrue(isinstance(self.bsg.system, BuildSystem))
+
+class TestBuildSystemGeneratorFunctional(TestCase):
+    @classmethod
+    def setUp(self):
+        self.funcs = {
+            'dumb': dummy_function,
+            'dump_new': dump_args_to_json_file_with_newlines,
+            'dump': dump_args_to_json_file,
+            'shell': subprocess.call }
+
+        self.bsg = BuildSystemGenerator(self.funcs)
+        self.bsg.check_method = 'force'
+
+    def simple_system(self):
+        self.bsg._process_job({
+            'target': 'a',
+            'dep': 'b',
+            'job': 'dumb',
+            'args': [None, None]
+            })
+        self.bsg._process_job({
+            'target': 'b',
+            'dep': 'c',
+            'job': 'dumb',
+            'args': [None, None]
+            })
+        self.bsg._process_job({
+            'target': 'c',
+            'dep': [],
+            'job': 'dumb',
+            'args': [None, None]
+            })
+
+    def complex_system(self):
+        self.bsg._process_job({
+            'target': 'a',
+            'dep': ['b', 'f', 'r'],
+            'job': 'dumb',
+            'args': [None, None]
+            })
+        self.bsg._process_job({
+            'target': 'b',
+            'dep': ['c', 'l'],
+            'job': 'dumb',
+            'args': [None, None]
+            })
+        self.bsg._process_job({
+            'target': 'c',
+            'dep': ['r', 'l'],
+            'job': 'dumb',
+            'args': [None, None]
+            })
+        self.bsg._process_job({
+            'target': 'r',
+            'dep': [],
+            'job': 'dumb',
+            'args': [None, None]
+            })
+        self.bsg._process_job({
+            'target': 'f',
+            'dep': [],
+            'job': 'dumb',
+            'args': [None, None]
+            })
+        self.bsg._process_job({
+            'target': 'l',
+            'dep': [],
+            'job': 'dumb',
+            'args': [None, None]
+            })
+
+    def test_dependency_ordering_one(self):
+        self.simple_system()
+        self.bsg.finalize()
+
+        self.assertEqual(self.bsg._process, ['a', 'b', 'c'])
+
+    def test_graph_assemblage_simple_comp(self):
+        self.simple_system()
+        self.bsg.finalize()
+
+        self.assertTrue('a' in self.bsg._process_tree)
+        self.assertTrue('b' in self.bsg._process_tree)
+        self.assertTrue('c' in self.bsg._process_tree)
+
+    def test_graph_assemblage_simple_comp(self):
+        self.simple_system()
+        self.bsg.finalize()
+
+        self.assertEqual(self.bsg._process_tree['a'], ['b'])
+        self.assertEqual(self.bsg._process_tree['b'], ['c'])
+        self.assertEqual(self.bsg._process_tree['c'], [])
+
+    def test_dependency_ordering_complex(self):
+        self.complex_system()
+        self.bsg.finalize()
+
+        self.assertEqual(self.bsg._process, ['a', 'f', 'b', 'c', 'l', 'r'])
+
+    def test_dependency_ordering_complex_comp(self):
+        self.complex_system()
+        self.bsg.finalize()
+
+        self.assertEqual(self.bsg._process_tree['a'], ['b', 'f', 'r'])
+        self.assertEqual(self.bsg._process_tree['b'], ['c', 'l'])
+        self.assertEqual(self.bsg._process_tree['c'], ['r', 'l'])
+        self.assertEqual(self.bsg._process_tree['r'], [])
+        self.assertEqual(self.bsg._process_tree['f'], [])
+        self.assertEqual(self.bsg._process_tree['l'], [])
+
+    def test_job_grouping(self):
+        self.complex_system()
+        self.bsg.finalize()
+
+        self.assertEqual(self.bsg.system._stages[0], 'r')
+        job = (self.funcs['dumb'], (None, None))
+        for i in self.bsg.system.stages['r'].stage:
+            self.assertEqual(i, job)
+
+    def test_run_without_errors_complex(self):
+        self.complex_system()
+        self.bsg.finalize()
+
+        self.assertTrue(self.bsg.system.run())
+
+    def test_run_without_errors_simple(self):
+        self.simple_system()
+        self.bsg.finalize()
+
+        self.assertTrue(self.bsg.system.run())
+
+    def test_run_without_errors_combined(self):
+        self.complex_system()
+        self.simple_system()
+        self.bsg.finalize()
+
+        self.assertTrue(self.bsg.system.run())

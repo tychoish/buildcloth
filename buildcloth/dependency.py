@@ -2,6 +2,7 @@ from buildcloth.utils import is_function
 import inspect
 import hashlib
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -40,25 +41,28 @@ class DependencyChecks(object):
                     self.checks[member[0]] = member
 
         if check is None and 'mtime' in self.checks:
-            self.check = 'mtime'
+            self._check = 'mtime'
         else:
-            self.check = members[0][0]
+            self._check = members[0][0]
 
     @property
     def check_method(self):
-        return self.check
+        return self._check
 
     @check_method.setter
     def check_method(self, value):
-        if self.check is None:
-            self.check = 'mtime'
-        elif self.check in self.checks:
-            self.check = value
+        if self._check is None:
+            self._check = 'mtime'
+        elif self._check in self.checks:
+            self._check = value
         else:
             raise Exception
 
     def force(self, target, dependency):
         return True
+
+    def ignore(self, target, dependency):
+        return False
 
     def mtime(self, target, dependency):
         if not os.path.exists(target) and not os.path.islink(target):
@@ -87,8 +91,8 @@ class DependencyChecks(object):
             return hash_check(target, dependency)
 
     def check(self, target, dependency):
-        logger.debug('running dependency check ({0}), of target {1} on dependency {2}'.format(self.check, target, dependency))
-        test = self.checks[self.check](target, dependency)
-        logger.info('rebuild check {0} result: {1} for target {2}'.format(self.check, test, tareget))
+        logger.debug('running dependency check ({0}), of target {1} on dependency {2}'.format(self._check, target, dependency))
+        test = self.checks[self._check][1](target, dependency)
+        logger.info('rebuild check {0} result: {1} for target {2}'.format(self._check, test, target))
 
         return test
