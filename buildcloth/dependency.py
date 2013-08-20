@@ -1,3 +1,23 @@
+# Copyright 2013 Sam Kleinman
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+:mod:`dependency` provides a set of tools for checking if dependencies need to
+be rebuilt. :class:`~dependency.DependencyChecks` provides a flexible interface
+to this dependency checking.
+"""
+
 from buildcloth.utils import is_function
 import inspect
 import hashlib
@@ -32,6 +52,8 @@ class DependencyChecks(object):
         members = inspect.getmembers(self, inspect.ismethod)
 
         self.checks = {}
+        """A dictionary mapping the kinds of dependency checks to the functions
+        that implement the dependency test."""
 
         for member in members:
             if is_function(member[1]):
@@ -42,6 +64,7 @@ class DependencyChecks(object):
 
         if check is None and 'mtime' in self.checks:
             self._check = 'mtime'
+            """The current default dependency check. Defaults to ``mtime``."""
         else:
             self._check = members[0][0]
 
