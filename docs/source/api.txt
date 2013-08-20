@@ -15,17 +15,21 @@ Additional Resources
 --------------------
 
 To get the most out of Buildcloth, you should have a firm grasp of
-build automation in general and your build system's syntax, in
-particular. For more information consider: 
+build automation in general. If you're using buildcloth as a metabuild
+system, a familiarity with the underlying build tool and its syntax
+may be helpful, in particular. For more information consider:
 
 - The `GNU Make Manual <http://www.gnu.org/software/make/manual/make.html>`_
-  
+
 - The `ninja documentation <http://martine.github.com/ninja/manual.html>`_
 
 Additional :doc:`buildcloth tutorial </tutorial>` provide a good
 introduction to basic buildcloth use.
 
-Buildcloth has no dependencies outside of the Python standard library
-and the build-dependency on `nose`_ for to run unit tests.
+As a metabuild tool, Buildcloth has no dependencies outside of the
+Python standard library and the build-dependency on `nose`_ for to run
+unit tests. As a build tool, buildcloth depends optionally on PyYAML.
+
+
 
 .. _`nose`: https://nose.readthedocs.org/en/latest/

@@ -1,0 +1,7 @@
+=============================================
+``dependency`` -- Dependency Change Detection
+=============================================
+
+.. automodule:: dependency
+   :members:
+   :undoc-members:

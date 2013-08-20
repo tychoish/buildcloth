@@ -24,8 +24,7 @@ Documents
 ---------
 
 :doc:`API Documentation </api>`
-     Full documentation of the :mod:`dtf` and the examples in
-     :mod:`cases` that comprise ``dtf``.
+     Full documentation of the entire Buildcloth implementation.
 
 :doc:`/tutorial`
      A basic tutorial that introduces installing Buildcloth as well as
