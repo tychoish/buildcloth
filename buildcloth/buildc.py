@@ -8,10 +8,16 @@ import sys
 import argparse
 import os
 import logging
+import subprocess
 
 logger = logging.getLogger(__name__)
 
 def _import_strings():
+    """
+    Takes no arguments and returns a dictionary mapping identifiers to strings,
+    used for variables or dynamic replacement of tokens in strings.
+    """
+
     try:
         from buildc import strings
     except ImportError:
@@ -24,13 +30,18 @@ def _import_strings():
 
     if not isinstance(strings, dict):
         logger.critical('strings object is not a dictionary')
-        raise TypeError2
+        raise TypeError
 
     return strings
 
 ############### function to generate and run buildsystem ###############
 
 def stages(jobs, stages, file, check):
+    """
+    Main public function to generate and run a
+    :class:`~system.BuildSystemGenerator()` build system.
+    """
+
     if os.path.isdir('buildc') or os.path.exists('buildc.py'):
         try:
             from buildc import functions
@@ -59,7 +70,7 @@ def stages(jobs, stages, file, check):
     bsg.finalize()
     bsg.system.workers(jobs)
 
-    if stages is None:
+    if not stages:
         bsg.system.run()
     else:
         highest_stage = 0
@@ -69,13 +80,14 @@ def stages(jobs, stages, file, check):
             if idx > highest_stage:
                 highest_stage = idx
 
-        bsg.run_part(idx=highest_stage, strict=False)
+        bsg.run_part(stop=highest_stage, strict=False)
+
 
 ############### functions to generate makefiles ###############
 
 ## "public" make function.
 
-def make(files):
+def make(files, stages):
     m = Makecloth()
     targets = _load_build_specs(files)
 
@@ -96,6 +108,14 @@ def make(files):
 
     m.write('Makefile')
     logger.info('wrote build system to Makefile')
+
+    logger.info('running make')
+    if not stages:
+        logger.debug('running make without any targets.')
+        subprocess.call('make')
+    else:
+        logger.debug('building the following targets: {0}.'.format(', '.join(stages)))
+        suprocess.call(['make'].extend(stages))
 
 ## component functions and processes
 
@@ -140,7 +160,7 @@ def _generate_make_jobs(tasks):
             if 'args' not in task:
                 task['args'] = []
 
-            if isinstance(task['args'], list):
+            if isinstance(task['args'], (list, tuple)):
                 args = '*' + ', '.join(task['args'])
             elif isinstance(task['args'], dict):
                 args = '**' + str(task['args'])
@@ -159,6 +179,9 @@ def _generate_make_jobs(tasks):
                 job += '; '.join(task['cmd'])
             else:
                 job += '; ' + task['cmd']
+                if 'args' in task:
+                    job += ' '
+                    job += ' '.join(task['args'])
 
         jobs.append(job)
 
@@ -180,13 +203,13 @@ def _load_build_specs(files):
                             for doc in i:
                                 tg.append(i)
                         elif isinstance(i, dict):
-                            build_targets.append(i)
+                            targets.append(i)
                         else:
                             logger.warning('structure of json file {0}is unclear, ignoring file.'.format(fn))
                 elif fn.endswith('yaml') or fn.endswith('yml'):
                     for i in yaml.safe_load_all(f):
                         i = BuildSystemGenerator.process_strings(i, strings)
-                        build_targets.append(i)
+                       targets append(i)
                 else:
                     logger.warning('format of {0} is unclear, not parsing'.format(fn))
         except OSError:
@@ -210,12 +233,12 @@ def cli_ui():
     parser.add_argument('--file', '-f', action='append',
                         default=[os.path.join(os.getcwd(), 'buildc.yaml')])
     parser.add_argument('--check', '-f', action='append',
-                        default='mtime', choices=['mtime', 'hash'],
+                        default='mtime', choices=['mtime', 'hash', 'force'],
                         help='for buildcloth runners, specifies which to use for testing dependency rebuilds.')
 
     parser.add_argument('--path', '-p', action='append',
                         default=[os.getcwd()])
-    parser.add_argument('stages', nargs="*", action='store', default=None)
+    parser.add_argument('stages', nargs="*", action='store', default=[])
     args = parser.parse_args()
 
     sys.path.extend(args.path)
@@ -241,7 +264,7 @@ def main():
     if ui.tool == 'buildc':
         stages(ui.jobs, ui.stages, ui.file, ui.check)
     elif ui.tool.startswith('make'):
-        make(ui.file)
+        make(ui.file, ui.stages)
     elif ui.too.startswith('ninja'):
         logger.critical('ninja implementation of buildc not complete.')
 

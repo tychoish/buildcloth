@@ -241,7 +241,7 @@ class BuildSystem(object):
 
         if strict is True:
             logger.critical('in strict mode, raising exception.')
-            raise exception("must add a BuildSteps object to a build system.")
+            raise exception(msg)
         else:
             logger.warning('in permissive mode; aborting, returning early.')
             return False
@@ -310,9 +310,15 @@ class BuildSystem(object):
             self.stages[name].run(strict)
             return True
 
-    def run_part(self, idx, strict=None):
+    def run_part(self, stop=0, start=0, run_all=False, strict=None):
         """
-        :param int idx: The zero-indexed identifier of the stage.
+        :param int stop: The last job in the zero-indexed list of the tasks in
+           the stages. Defaults to zero, which
+
+        :param int start: The first job in the zero-indexed list of the tasks in
+           the stages. Defaults to 0, or the first step.
+
+        :param bool run_all: Defaults to Run
 
         :param bool strict: Defaults to :attr:`~system.BuildSystem.strict`.
 
@@ -322,24 +328,46 @@ class BuildSystem(object):
         :returns: The return value of the *last* ``run()`` method called.
 
         Calls the :meth:`~stages.BuildSteps.run()` method of each stage object
-        until the ``idx``\ :sup:`th` item of the.
+        until the ``idx``\ :sup:`th` item of the :attr:`~stages.BuildSystem._stages` array.
         """
-
-
-        if idx > len(self._stages) or idx < 0:
-            return self._error_or_return(msg='job at index {0} does not exist'.format(idx),
-                                         exception=StageRunError,
-                                         strict=strict)
 
         if strict is None:
             logger.debug('defaulting to object default strict mode.')
             strict = self.strict
 
+        if run_all is True:
+            logger.debug('run all the stages')
+            run_stages = self._stages
+        elif start > stop:
+            return self._error_or_return(msg='Not possible to stop before you start.',
+                                         exception=StageRunError,
+                                         strict=strict)
+        elif start < 0 or stop < 0:
+            return self._error_or_return(msg='Job running does not support negative indexing.',
+                                         exception=StageRunError,
+                                         strict=strict)
+        elif len(self._stages) == 1 and stop == 0:
+            logger.debug('run the only stage.')
+            run_stages = self._stages
+        elif stop + 1 > len(self._stages):
+            return self._error_or_return(msg='{0} is too large to specify a stopping point.'.format(stop),
+                                         exception=StageRunError,
+                                         strict=strict)
+        elif start == 0 and stop == 0:
+            logger.debug('run only the first stage.')
+            run_stages = [self._stages[0]]
+        elif start == stop:
+            logger.debug('run only the {0} stage'.format(start))
+            run_stages = [self._stages[start]]
+        else:
+            logger.debug('run stage {0} until {1}, not checking dependencies'.format(start, stop))
+            run_stages = self._stages[start:stop]
+
         if strict is True and self.open is True:
             logger.critical('cannot run build systems that are open in strict mode.')
             raise StageRunError("Build system must be closed before running.")
         else:
-            for job in self._stages[:idx]:
+            for job in run_stages:
                 logger.info('running build stage {0}'.format(job))
                 ret = self.stages[job].run()
                 logger.info('completed build stage {0}'.format(job))
@@ -361,7 +389,7 @@ class BuildSystem(object):
         Calls the :meth:`~stages.BuildSteps.run()` method of each stage object.
         """
         logger.info('running entire build system')
-        ret = self.run_part(idx=self.count(), strict=strict)
+        ret = self.run_part(run_all=True, strict=strict)
 
         logger.debug('return value for stage: {0}'.format(ret))
 

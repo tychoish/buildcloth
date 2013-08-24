@@ -281,6 +281,7 @@ class ComplexSystem(TestCase):
         job_four.add(dump_args_to_json_file_with_newlines, (self.a, self.a, self.fn_four))
         job_four.add(dump_args_to_json_file_with_newlines, (self.a, self.b, self.fn_four))
         job_four.add(dummy_function, (self.a, self.c))
+        job_four.add(dummy_function, (self.a, self.c))
 
         self.bs.add_stage('one', job_one)
         self.bs.add_stage('two', job_two)
@@ -351,7 +352,7 @@ class TestSystemRunPart(ComplexSystem):
         self.assertTrue(self.bs.run_part(2))
         self.bs.strict = True
 
-    def test_run_part_success(self):
+    def test_run_part_failure_negative_indexing(self):
         self.assertTrue(self.bs.open)
         self.bs.close()
         self.assertFalse(self.bs.open)
@@ -378,9 +379,44 @@ class TestSystemRunPartLimits(ComplexSystem):
 
         self.bs.strict = True
 
-    def test_part_off_by_one_potential(self):
+class TestSystemRunPart_Suite_0(ComplexSystem):
+    def test_run_part_starting_at_beginning(self):
+        self.assertTrue(self.bs.open)
         self.bs.close()
-        self.assertTrue(self.bs.run_part(self.bs.count()))
+        self.assertFalse(self.bs.open)
+
+        self.assertTrue(self.bs.run_part(stop=2, start=0))
+
+        self.assertTrue(os.path.exists(self.fn_one))
+        self.assertTrue(os.path.exists(self.fn_two))
+        self.assertFalse(os.path.exists(self.fn_three))
+        self.assertFalse(os.path.exists(self.fn_four))
+
+class TestSystemRunPart_Suite_1(ComplexSystem):
+    def test_all_override(self):
+        self.assertTrue(self.bs.open)
+        self.bs.close()
+        self.assertFalse(self.bs.open)
+
+        self.assertTrue(self.bs.run_part(run_all=True))
+
+        self.assertTrue(os.path.exists(self.fn_one))
+        self.assertTrue(os.path.exists(self.fn_two))
+        self.assertTrue(os.path.exists(self.fn_three))
+        self.assertTrue(os.path.exists(self.fn_four))
+
+class TestSystemRunPart_Suite_2(ComplexSystem):
+    def test_run_middle_section(self):
+        self.assertTrue(self.bs.open)
+        self.bs.close()
+        self.assertFalse(self.bs.open)
+
+        self.assertTrue(self.bs.run_part(start=1, stop=3))
+
+        self.assertFalse(os.path.exists(self.fn_one))
+        self.assertTrue(os.path.exists(self.fn_two))
+        self.assertTrue(os.path.exists(self.fn_three))
+        self.assertFalse(os.path.exists(self.fn_four))
 
 class TestSystemRunAllTestOutput(ComplexSystem):
     def result_assertion(self, fn, result):
