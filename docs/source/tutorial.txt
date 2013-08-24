@@ -180,7 +180,7 @@ Consider the following example Buildcloth definition:
    for b in build:
       dep = b.rsplit('.', 1)[0] + '.cpp'
 
-      m.target(target=b, dependency=dep + ' source/system_configure.h')
+      m.target(target=b, dependency=[dep, 'source/system_configure.h'])
       m.job('buildscripts/header_metadata.py ' + b)
       m.msg('[headers]: generated build system')
 
