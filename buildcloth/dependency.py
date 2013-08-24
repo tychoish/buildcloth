@@ -18,6 +18,7 @@ be rebuilt. :class:`~dependency.DependencyChecks` provides a flexible interface
 to this dependency checking.
 """
 
+from buildcloth.err import DependencyCheckError
 from buildcloth.utils import is_function
 import inspect
 import hashlib
@@ -49,7 +50,6 @@ def md5_file_check(file, block_size=2**20):
 
     :returns: The md5 checkusm of ``file``.
     """
-
 
     md5 = hashlib.md5()
 
@@ -123,7 +123,7 @@ class DependencyChecks(object):
                 self._check = 'mtime'
             else:
                 self._check = insepect.getmembers(self, inspect.ismethod)[0][0]
-        elif self._check in self.checks:
+        elif value != 'check' and value in self.checks:
             self._check = value
         else:
             raise DependencyCheckError('{0} does not exist'.format(value))
@@ -183,6 +183,7 @@ class DependencyChecks(object):
         :returns: ``True`` when ``dependency`` or any members of a
            ``dependency`` list have a different md5 checkusm than ``target``.
         """
+
         if not os.path.exists(target) and not os.path.islink(target):
             return True
 
