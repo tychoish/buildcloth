@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from multiprocessing import cpu_count
 from buildcloth.makefile import MakefileCloth
-from buildcloth.system import BuildSystemGenerator, is_function
+from buildcloth.system import BuildSystemGenerator, is_function, narrow_buildsysteme
 
 import sys
 import argparse
@@ -72,6 +72,10 @@ def stages(jobs, stages, file, check):
 
     if not stages:
         bsg.system.run()
+    elif len(stages) == 1:
+        bsg = narrow_buildsystem(stages[0], bsg.system)
+        bsg.system.workers(jobs)
+        bsg.run()
     else:
         highest_stage = 0
 
@@ -155,7 +159,7 @@ def _collect_make_tasks(job):
 def _generate_make_jobs(tasks):
     jobs = []
     for task in tasks:
-        if 'job' in task:
+        if (os.path.isdir('buildc') or os.path.exists('buildc.py') ) and 'job' in task:
             job = 'python -c from buildc import functions ; functions[{0}]({1})'
             if 'args' not in task:
                 task['args'] = []
@@ -209,7 +213,7 @@ def _load_build_specs(files):
                 elif fn.endswith('yaml') or fn.endswith('yml'):
                     for i in yaml.safe_load_all(f):
                         i = BuildSystemGenerator.process_strings(i, strings)
-                       targets append(i)
+                        targets append(i)
                 else:
                     logger.warning('format of {0} is unclear, not parsing'.format(fn))
         except OSError:
@@ -232,8 +236,8 @@ def cli_ui():
                              to use buildc as a metabuild tool.")
     parser.add_argument('--file', '-f', action='append',
                         default=[os.path.join(os.getcwd(), 'buildc.yaml')])
-    parser.add_argument('--check', '-f', action='append',
-                        default='mtime', choices=['mtime', 'hash', 'force'],
+    parser.add_argument('--check', '-c', action='append',
+                        default='mtime', choices=['mtime', 'hash', 'force', 'ignore'],
                         help='for buildcloth runners, specifies which to use for testing dependency rebuilds.')
 
     parser.add_argument('--path', '-p', action='append',
@@ -246,10 +250,10 @@ def cli_ui():
     log_level = logging.WARNING
     logging.basicConfig(level=log_level)
 
-    if args.debug:
-        log_level = logging.DEBUG
-    elif args.log is not False:
+    if args.log is not False:
         log_level = logging.INFO
+    elif args.debug:
+        log_level = logging.DEBUG
 
     if args.log is not False and os.path.isdir(os.path.dirname(args.log)):
         logging.basicConfig(filename=args.log, level=log_level)

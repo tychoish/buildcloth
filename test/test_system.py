@@ -1,4 +1,4 @@
-from buildcloth.system import BuildSystem, BuildSystemGenerator
+from buildcloth.system import BuildSystem, BuildSystemGenerator, narrow_buildsystem
 from buildcloth.stages import BuildStage, BuildSequence, BuildSteps
 from buildcloth.dependency import DependencyChecks
 from buildcloth.err import InvalidStage, StageClosed, InvalidSystem, StageRunError, InvalidJob
@@ -1123,63 +1123,73 @@ class TestBuildSystemGeneratorFunctional(TestCase):
         self.bsg = BuildSystemGenerator(self.funcs)
         self.bsg.check_method = 'force'
 
+        self.complex_jobs = [
+            {
+                'target': 'a',
+                'dep': ['b', 'f', 'r'],
+                'job': 'dumb',
+                'args': [None, None]
+            },
+            {
+                'target': 'b',
+                'dep': ['c', 'l'],
+                'job': 'dumb',
+                'args': [None, None]
+            },
+            {
+                'target': 'c',
+                'dep': ['r', 'l'],
+                'job': 'dumb',
+                'args': [None, None]
+            },
+            {
+                'target': 'r',
+                'dep': [],
+                'job': 'dumb',
+                'args': [None, None]
+            },
+            {
+                'target': 'f',
+                'dep': [],
+                'job': 'dumb',
+                'args': [None, None]
+            },
+            {
+                'target': 'l',
+                'dep': [],
+                'job': 'dumb',
+                'args': [None, None]
+            }
+        ]
+
+        self.simple_jobs = [
+            {
+                'target': 'a',
+                'dep': 'b',
+                'job': 'dumb',
+                'args': [None, None]
+            },
+            {
+                'target': 'b',
+                'dep': 'c',
+                'job': 'dumb',
+                'args': [None, None]
+            },
+            {
+                'target': 'c',
+                'dep': [],
+                'job': 'dumb',
+                'args': [None, None]
+            }
+        ]
+
     def simple_system(self):
-        self.bsg._process_job({
-            'target': 'a',
-            'dep': 'b',
-            'job': 'dumb',
-            'args': [None, None]
-            })
-        self.bsg._process_job({
-            'target': 'b',
-            'dep': 'c',
-            'job': 'dumb',
-            'args': [None, None]
-            })
-        self.bsg._process_job({
-            'target': 'c',
-            'dep': [],
-            'job': 'dumb',
-            'args': [None, None]
-            })
+        for i in self.simple_jobs:
+            self.bsg._process_job(i)
 
     def complex_system(self):
-        self.bsg._process_job({
-            'target': 'a',
-            'dep': ['b', 'f', 'r'],
-            'job': 'dumb',
-            'args': [None, None]
-            })
-        self.bsg._process_job({
-            'target': 'b',
-            'dep': ['c', 'l'],
-            'job': 'dumb',
-            'args': [None, None]
-            })
-        self.bsg._process_job({
-            'target': 'c',
-            'dep': ['r', 'l'],
-            'job': 'dumb',
-            'args': [None, None]
-            })
-        self.bsg._process_job({
-            'target': 'r',
-            'dep': [],
-            'job': 'dumb',
-            'args': [None, None]
-            })
-        self.bsg._process_job({
-            'target': 'f',
-            'dep': [],
-            'job': 'dumb',
-            'args': [None, None]
-            })
-        self.bsg._process_job({
-            'target': 'l',
-            'dep': [],
-            'job': 'dumb',
-            'args': [None, None]
-            })
+        for i in self.complex_jobs:
+            self.bsg._process_job(i)
 
     def test_dependency_ordering_one(self):
         self.simple_system()
@@ -1247,3 +1257,27 @@ class TestBuildSystemGeneratorFunctional(TestCase):
         self.bsg.finalize()
 
         self.assertTrue(self.bsg.system.run())
+
+    def test_ingestion_simple(self):
+        self.simple_system()
+        self.bsg.finalize()
+        procedural = sorted(self.bsg.specs.keys())
+
+        second = BuildSystemGenerator(self.bsg.funcs)
+        second.ingest(self.simple_jobs)
+        second.finalize()
+        ingested = sorted(second.specs.keys())
+
+        self.assertEqual(procedural, ingested)
+
+    def test_buildsystem_narrowing_complex(self):
+        self.complex_system()
+
+        self.bsg.finalize()
+
+        new_bsg  = narrow_buildsystem('c', self.bsg)
+
+        for i in ['c', 'r', 'l']:
+            self.assertTrue(i in new_bsg._process_tree)
+
+        self.assertTrue(len(new_bsg._process_tree) == 3)

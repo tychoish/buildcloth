@@ -166,7 +166,7 @@ class BuildSystem(object):
            callers from adding duplicate stages to a :class:~system.BuildSystem`
            object.
 
-        :raises: :err:`~err.InvalidStage()` in strict mode if ``name`` or
+        :raises: :exc:`~err.InvalidStage()` in strict mode if ``name`` or
            ``stage`` is malformed.
 
         Creates a new stage and optionally populates the stage with tasks. Note
@@ -409,7 +409,7 @@ class BuildSystemGenerator(object):
     :class:`~system.BuildSystemGenerator` is designed to parse streams of YAML
     documents that resemble the following:
 
-    .. code-lock:: yaml
+    .. code-block:: yaml
 
        job: <func>
        args: <<arg>,<list>>
@@ -459,6 +459,9 @@ class BuildSystemGenerator(object):
 
         self._process_tree = {}
         "Internal representation of the dependency tree."
+
+        self.specs = {}
+        "Mapping of job specs targets to specs."
 
         self.system = None
 
@@ -776,7 +779,7 @@ class BuildSystemGenerator(object):
 
         :param callable func: A callable object.
 
-        :raises: :exec:`~err.InvaidJob` if ``func`` is not callable.
+        :raises: :exc:`~err.InvaidJob` if ``func`` is not callable.
 
         Adds a callable object to the :attr:`~system.BuildSystemGenerator.funcs`
         attribute with the identifier ``name``.
@@ -788,8 +791,32 @@ class BuildSystemGenerator(object):
         logger.debug('adding task named {0}'.format(name))
         self.funcs[name] = func
 
+    def ingest(self, jobs, strings=None):
+        """
+        :param iterable jobs: An interable object that contains build job
+            specifications.
+
+        :param dict strings: Optional. A dictionary of strings mapping to
+           strings to use as replacement keys for spec content.
+
+        :returns: The number of jobs added to the build system.
+
+        For every document
+        """
+
+        job_count = 0
+        for spec in jobs:
+            self._process_job(spec, strings)
+            job_count += 1
+
+        logger.debug('loaded {0} jobs'.format(job_count))
+        return job_count
+
+
     def ingest_yaml(self, filename, strings=None):
         """
+        Wraps :meth:`~BuildSystemGenerator.ingest()`.
+
         :param string filename: The fully qualified path name of a :term:`YAML`
            file that contains a build system specification.
 
@@ -811,10 +838,7 @@ class BuildSystemGenerator(object):
                     logger.critical(msg)
                     raise StageRunError(msg)
 
-                job_count = 0
-                for spec in jobs:
-                    self._process_job(spec, strings)
-                    job_count += 1
+                job_count = self.ingest(jobs, strings)
 
             logger.debug('loaded {0} jobs from {1}'.format(job_count, filename))
         except IOError:
@@ -822,6 +846,8 @@ class BuildSystemGenerator(object):
 
     def ingest_json(self, filename, strings=None):
         """
+        Wraps :meth:`~BuildSystemGenerator.ingest()`.
+
         :param string filename: The fully qualified path name of a :term:`JSON`
            file that contains a build system specification.
 
@@ -838,10 +864,7 @@ class BuildSystemGenerator(object):
             with open(filename, 'r') as f:
                 jobs = json.load(f)
 
-                job_count = 0
-                for spec in jobs:
-                    self._process_job(spec, strings)
-                    job_count += 1
+                job_count = self.ingest(jobs, strings)
 
             logger.debug('loaded {0} jobs from {1}'.format(job_count, filename))
         except IOError:
@@ -929,6 +952,8 @@ class BuildSystemGenerator(object):
         job = self._process_stage(spec)
         dependencies = self.get_dependency_list(spec)
 
+        self.specs[spec['target']] = spec
+
         if self.check.check(spec['target'], dependencies) is True:
             msg = 'target {0} is older than dependency {1}: adding to build queue'
             logger.info(msg.format(spec['target'], dependencies))
@@ -941,13 +966,17 @@ class BuildSystemGenerator(object):
         logger.debug('added {0} to dependency graph'.format(spec['target']))
         self._process_tree[spec['target']] = self.get_dependency_list(spec)
 
-    def _process_job(self, spec):
+    def _process_job(self, spec, strings=None):
         """
         :param dict spec: A dictionary of strings that describe a build job.
 
         Processes the ``spec`` and attempts to create and add the resulting task
         to the build system.
         """
+
+        if strings is not None:
+            for key in spec:
+                spec[key] = spec[key].format(strings)
 
         if 'dependency' in spec or 'dep' in spec or 'deps' in spec:
             if ('stage' in spec and 'target' in spec):
@@ -981,3 +1010,32 @@ class BuildSystemGenerator(object):
             self._stages.stages[spec['stage']].add(job[0], job[1])
             logger.debug('added job to stage: {0}'.format(spec['stage']))
             return True
+
+def narrow_buildsystem(target, bs):
+    if not isinstance(bs, BuildSystemGenerator):
+        raise TargetError
+    elif target not in bs._process_tree:
+        raise TargetError
+
+    targets = set([target])
+    bsg = BuildSystemGenerator(bs.funcs)
+
+    safety = 0
+
+    def resolve(tree, target):
+        for i in tree:
+            if i in targets:
+                safety += 1
+
+                if safety >= len(bs._process_tree):
+                    raise TargetError
+            else:
+                targets.add(i)
+                resolve(bs._process_tree[i], i)
+
+    resolve(bs._process_tree[target], target)
+
+    bsg.ingest( ( bs.specs[target] for target in targets )  )
+    bsg.finalize()
+
+    return bsg

@@ -112,6 +112,10 @@ class InvalidSystem(BuildStagesError):
     objects."""
     pass
 
+class TargetError(BuildStagesError):
+    """Raised when encountering an error in an attempt to narrow a build system."""
+    pass
+
 #################### Dependency Checking Errors ####################
 
 class DependencyCheckError(BuildClothError):
