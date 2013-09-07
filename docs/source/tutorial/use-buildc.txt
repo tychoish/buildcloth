@@ -1,0 +1,199 @@
+=====================================
+Define and Run Builds With ``buildc``
+=====================================
+
+Initially Buildcloth was a meta-build tool: by writing python code you
+could assemble a :term:`Makefile` that you could use to orchestrate a
+build process. However, for some classes of builds, it may be more
+efficient use ``buildc``, which implements a subset of Make features use
+pure Python and avoids some of the overhead associated with Make-based
+build processes.
+
+Overview
+--------
+
+This tutorial describes the schema for ``buildc`` definitions and
+provides a high level introduction to running a build using the
+``buildc`` tool.
+
+Build Specification
+-------------------
+
+There two fundamental kinds of build definitions in build systems, to
+define different kinds of tasks, and several variations that build on
+these types.
+
+The smallest unit of work defined in a build system is a *job*.
+
+Python Job
+~~~~~~~~~~
+
+These objects define work units that call Python functions. Consider
+the following prototype document in both YAML and JSON notation:
+
+.. code-block:: javascript
+
+   {
+     "job": <func>,
+     "args": [ <arg,> <arg> ],
+     "stage": <name>
+   }
+
+.. code-block:: yaml
+
+   job: <func>
+   args: [ <arg,> <arg> ]
+   stage: <name>
+   ---
+
+These jobs name:
+
+- a function specified using a key in a dict that maps
+  string identifiers to Python functions available when creating the
+  jobs.
+
+- A list of arguments to that function.
+
+- The name of a stage. Stages are groups of tasks that do not depend
+  upon each other and that may run in parallel.
+
+Shell Jobs
+~~~~~~~~~~
+
+These objects define work units that run arbitrary process using
+Python's :mod:`subprocess` module. Consider
+the following prototype document in both YAML and JSON notation:
+
+.. code-block:: javascript
+
+   {
+     "dir": <path>,
+     "cmd: <program>,
+     "args": [ <arg,> <arg> ],
+     "stage": <name>
+   }
+
+.. code-block:: yaml
+
+   dir: <path>
+   cmd: <program>
+   args: [ <arg,> <arg> ]
+   stage: <name>
+   ---
+
+These jobs name:
+
+- The path where buildcloth will runs the command. Paths may be either
+  lists of elements (joined with :func:`os.path.join()`) or a string.
+
+- The name program to run.
+
+- A list of arguments to pass to the program.
+
+- The name of a stage. Stages are groups of tasks that do not depend
+  upon each other and that may run in parallel.
+
+Dependencies
+~~~~~~~~~~~~
+
+In both shell and python jobs, you may specify *dependencies* and
+*targets*. In job specifications rather than *stages* to allow
+buildcloth to order tasks based on the relationships of the dependency
+graph. Consider the following python and shell jobs with dependency
+information:
+
+
+.. code-block:: javascript
+
+   {
+     "dir": <path>,
+     "cmd: <program>,
+     "args": [ <arg,> <arg> ],
+     "target": <product>,
+     "dependency": <product>
+   }
+
+.. code-block:: yaml
+
+   dir: <path>
+   cmd: <program>
+   args: [ <arg,> <arg> ]
+   target: <product>
+   dependency: <product>
+   ---
+
+.. code-block:: javascript
+
+   {
+     "job": <func>,
+     "args": [ <arg,> <arg> ],
+     "target": <product>,
+     "dependency": <product>
+   }
+
+.. code-block:: yaml
+
+   job: <func>
+   args: [ <arg,> <arg> ]
+   target: <product>
+   dependency: <product>
+   ---
+
+Task Sequence Jobs
+~~~~~~~~~~~~~~~~~~
+
+Most buildcloth job statements specify single tasks. Buildcloth *also*
+supports job compound job statements that specify an ordered list of
+tasks for a single target. These sequences can combine Python and
+shell jobs, and have the following form:
+
+.. code-block:: yaml
+
+   tasks:
+     - job: <name>
+       args: [ <arg>, <arg> ]
+     - dir: <path>
+       cmd: <program>
+       args: [ <arg>, <arg> ]
+   stage: <name>
+   ---
+
+.. code-block:: json
+
+   {
+     "tasks" :  [
+       {
+         "job": <name>,
+         "args": [ <arg,> <arg> ],
+       },
+       {
+         "dir": <path>,
+         "cmd: <program>,
+         "args": <name>
+       }
+     ]
+     "stage": <name>
+   }
+
+
+Running Builds
+--------------
+
+The components of a fully specified ``buildc``-based build system are:
+
+1. A ``buildc.yaml`` or ``buildc.json`` file. You may optionally
+   specify additional specification file using the :option:`--file
+   <buildc --file>` option.
+
+2. An importable Python module named ``buildc``. Optional. Only
+   required to store and expose Python functions for Python jobs and
+   strings for string replacement in jobs. Use the  :option:`--path
+   <buildc --path>` option to control the Python search path.
+
+The final argument to ``buildc`` is an optional list of stages that
+you want to build. This is:
+
+- Nothing. ``buildc`` will run the complete build as specified.
+
+- If you specify a list of stages ``buildc`` will rebuild *only* those
+  stages and any targets required to build those stages.

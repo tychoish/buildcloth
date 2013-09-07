@@ -1,0 +1,23 @@
+==============================
+Buildcloth Development Roadmap
+==============================
+
+This document provides a high level overview of the future development
+of Buildcloth including release planning and per-system releases.
+
+See :doc:`/changelog` for a history of recent releases. See the
+`issue tracker
+<https://issues.cyborginstitute.net/describecomponents.cgi?product=buildcloth>`_
+for a more complete list of specific features, repaired bugs, and
+ongoing development tasks.
+
+- Adjust size of worker pools based on size of task pool. Allow users
+  to specify size of pools more granularity.
+
+- Improve testing of systems that mix "stages" and
+
+- Add the ability to randomize job ordering.
+
+- Explore integrate "narrowing" feature at more levels of the system.
+
+- Cache rebuild logs.

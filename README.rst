@@ -55,8 +55,8 @@ Features
   from your build system, making it easier to transition between (and
   test) Make, Ninja, and potentially other custom tools.
 
-.. _`Ninja`:http://martine.github.com/ninja/
-.. _`Make`:http://www.gnu.org/software/make/manual/make.html
+.. _`Ninja`: http://martine.github.com/ninja/
+.. _`Make`: http://www.gnu.org/software/make/manual/make.html
 
 Use
 ---

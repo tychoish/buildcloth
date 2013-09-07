@@ -391,3 +391,7 @@ a.footnote-reference:hover {
 a:hover tt {
     background: #efefef;
 }
+
+.hidden {
+    display: none;
+}

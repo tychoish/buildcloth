@@ -1,0 +1,178 @@
+=======================
+Build System Background
+=======================
+
+In the world of software development build systems are both ubiquitous
+and neglected. The requirements are plentiful, there are limited
+options, and build system-problems are (typically) outside of the
+focus of most projects specialty and interest.
+
+This document outlines four basic approaches to build system problems,
+leading to the approaches and paradigms that Buildcloth supports.
+
+Approaches
+----------
+
+Scripts
+~~~~~~~
+
+For simple build processes, it's possible to conceive of a single
+program that defines a sequence of steps that produces a "built"
+target. These scripts, though not frequently used, is that programs of
+this nature allow complete customization of the build process and can
+support build processes that are significantly *non-standard*.
+
+There are two main problems with with using a custom script to
+automate a build process: first, build processes are (often)
+inherently parallelizable and simple programs are not; second, custom
+scripts are difficult to maintain and may be inflexible and fragile
+and projects grow and develop.
+
+Beyond the concerns around performance and maintenance, the more
+compelling argument against fully custom build scripts is that
+developers on a given project should focus on developing that project
+and *not* in maintaining software to support the build of that
+software.
+
+Makefiles
+~~~~~~~~~
+
+Make is a general build automation tool that provides a restricted
+syntax for describing build processes, and can describe and automate
+virtually any build. Furthermore, Make runs pretty much everywhere,
+and owing mostly to its age, is well understood by practically all
+developers and administrators.
+
+Although Make includes support for conditionals, variables, and
+functions, Makefiles consist of a number of definitions that have
+three components: the name of the target (typically files, or things
+to build,) a list dependencies of this target (i.e. files or other
+targets), and a sequence of commands that produce the target.
+
+When you build a target or targets, Make processes the dependencies of
+your targets and builds all of the targets needed to satisfy the all
+of the dependencies (recursively) for the targets you are
+building. Make has two properties that help matters greatly.
+
+- If Make detects that a target is "newer" than all of its
+  dependencies (i.e. the last run), Make will not rebuild the target.
+
+- If running in a parallel mode, (optional,) Make will allow multiple
+  jobs to run at the same time if those jobs do not depend on each
+  other.
+
+Most build automation tools provide a Make-like feature set, but
+innovate in other areas, and provide different definition formats,
+short cuts, or other automatic features.
+
+In truth, Make isn't awful. It's parallelism metaphor is useful, it's
+well tested and understood, and is pretty easy to reason about. There
+are problems:
+
+- Make is not incredibly fast: job execution has not-insignificant
+  process spawning costs,
+
+- It's difficult to architect a build process such that Make will
+  execute it in parallel in a way that even approaches optimal. The
+  result is build processes that takes longer than it should and
+  becomes more difficult to maintain as complexity grows.
+
+- For complex builds, particularly builds that must support multiple
+  platforms, Makefiles can become more fragile over time.
+
+Fundamentally, I think, Make and Make-like tools are the right kind of
+solution to the build automation problem; however, a great deal
+depends on the actual specific implementation.
+
+Metabuild Tools
+~~~~~~~~~~~~~~~
+
+Meta-build tools attempt to resolve some of the problems around build
+system maintenance and cross-platform differences. Metabuild tools
+don't automate build processes, but they are able to produce Makefiles
+(or similar,) for a build process using a specification system that
+either derives directly from the source tree itself or is easier to
+maintain than a corresponding Makefile.
+
+Meta build systems are more specialized than Buildtools, and are typically
+only relevant or useful for a subset of projects. However, the
+specialty of a meta-build tool is often its asset rather than its
+weakness in most cases.
+
+Examples of metabuild tools include CMake and Automake/Autoconf, as
+well as the MakefileCloth and NinjaFileCloth components of
+buildcloth. The boundary between build system and metabuild tools is
+sometimes blurry, as with `SCons`_/`Waf`_.
+
+There are two general disadvantages to metabuild tools:
+
+1. Metabuild tools, can be *too* specialized, which leads to
+   inflexibility, particularly along the periphery of build processes:
+   different requirements for malt-platform build processes; and
+   builds with a larger number of scripts
+
+2. Metabuild tools may produce less efficient build specifications
+   than a well constructed custom build tool.
+
+.. _`SCons`: http://www.scons.org/
+.. _`Waf`: http://code.google.com/p/waif/
+
+Buildcloth
+~~~~~~~~~~~
+
+Initially, Buildcloth was a simple metabuild system that provided a
+very thin layer on top of Makefiles and Ninja files (including a
+compatibility layer.) These components are extremely useful and
+(hopefully) bridge the gap between the awkwardness and verbosity of
+direct build tool specifications *and* the restrictions of using either
+specialized scripts or a restrictive metabuild tool.
+
+On the whole, encoding build logic in conventional Python code is at
+worst the same as maintaining makefile code, and can be much more
+flexible and maintainable particularly for systems with a large number
+of targets.
+
+The ``buildc`` component of Buildcloth, uses standard Python
+components to implement an independent build tool, founded on two
+basic ideas:
+
+1. The cost of creating processes (i.e. "shelling out") in make files
+   is intensely expensive particularly when the time requirements to
+   produce a target are small.
+
+2. Encoding the process to create targets in a build specification
+   file is difficult and in most systems, any sufficiently complex
+   process is eventually wrapped in some kind of script.
+
+Given the confluence of these properties ``buildc`` makes it possible
+to run a large amount of a build process inside of a single
+:mod:`multiprocessing`\ -based Python process.
+
+``buildc``'s weaknesses center around its dependency graph analysis,
+interface flexibility for building single targets or groups of
+targets, and in error propagation and handling.
+
+Next Generation Build Systems
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Buildcloth is an entrant in an attempt to implement powerful build
+tools to address contemporary problems. In contemporary practice the
+kinds of projects that Make is *great* and building are less
+prevalent; current programming languages require less *building* but
+still have important build requirements for packaging, deployment,
+documentation, and automation. The build problems, solutions and
+requirements for these projects are unique and could bare greater
+attention.
+
+Other build systems will begin to exist that address other aspects of
+these problems using new metaphors, and allowing everyone to build
+great things!
+
+Conclusions
+-----------
+
+There is no single build system tool that's ideal for all kinds of
+projects, and each approach to build automation is appropriate for a
+certain classes of projects. Continue reading
+:doc:`/tutorial/design-buildsystems` for more high level information
+on build systems.

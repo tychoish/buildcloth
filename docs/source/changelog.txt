@@ -2,6 +2,8 @@
 Buildcloth Changelog
 ====================
 
+See :doc:`/roadmap` for future development plans.
+
 Release 0.2.0
 -------------
 
@@ -11,7 +13,9 @@ Release 0.2.0
 - Improved :doc:`/tutorial` documentation.
 - Python 3 compatibility.
 - Assorted Bug fixes.
-- "Stages Module" and tests and associated documentation changes.
+- Build System support for pure-python build system assembly and
+  execution.
+- Vast improvements to test coverage.
 
 Release 0.1.0
 -------------

@@ -1,0 +1,33 @@
+====================
+Custom Build Systems
+====================
+
+In truth, ``buildc`` (See: :doc:`/tutorial/use-buildc` and
+:doc:`/api/buildc`) is a thin wrapper around the underlying build
+system library. It performs the following functions:
+
+- Optionally converts the ``buildc`` specification into a Makefile (work to
+  generate ninja files is forthcoming.)
+
+- Imports ``strings`` (for substitution) and the function dictionary
+  for Python-based build jobs.
+
+- Processes user input, in combination with sensible defaults, and
+  passes this onto the build system library in :doc:`system.py
+  </api/system>`.
+
+Depending on the current system you're using, you may find that
+foregoing ``buildc`` itself in favor of wrapping ``system.py``
+directly may be more efficient. This would permit:
+
+- defining build specifications using generator functions and passing
+  these, with functions directly into build systems. You will need to
+  define your own set of user-interface functions.
+
+- easier integration with existing build infrastructure.
+
+- better embedding of build-cloth components into your existing
+  infrastructure.
+
+.. note:: In a future release this tutorial will include more through
+   examples and instructions for building a custom build system.

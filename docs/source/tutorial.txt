@@ -1,289 +1,33 @@
-===================
-Buildcloth Tutorial
-===================
+====================
+Buildcloth Tutorials
+====================
 
-Overview
---------
+.. default-domain:: javascript
 
-Buildcloth provides a thin-layer of Python interface on top of
-Makefiles to generate build systems for your project. These generated
-build systems are (potentially) more flexible than hand crafted
-makefiles and make it easier to maintain a data-generated build
-systems.
+These tutorials introduce specific actions and operations using
+Buildcloth tools.
 
-Indications
-~~~~~~~~~~~
+:doc:`/tutorial/design-buildsystems`
+   A high level introduction to build
 
-- Build targets that are difficult to categorize using file
-  extensions, particularly for guilds that require multi-stage pre-
-  and post-processing. Makefile's macros and target matching is great
-  if each transformation changes the file extension in regular ways,
-  but less good if the build targets are less generic.
+:doc:`/tutorial/generate-makefiles`
+   Describes the process of using buildcloth meta-build API to
+   generate ``Makefiles``.
 
-- You need to build different targets based on conditions that are
-  hard to detect/supply in a makefile. Some platform-specific build
-  adaptations can be difficult to specify directly in make systems.
+:doc:`/tutorial/use-buildc`
+   Describes the process and format for specifying and running
+   buildsystems using :doc:`buildc </api/buildc>` which provides
+   wrapper around :doc:`system.py </api/system>`.
 
-- You have Python application or infrastructure code (and
-  corresponding data) that you want to use in your build system
-  directly.
+:doc:`/tutorial/custom-buildsystem`
+   Introduces the possibility of using the :doc:`system.py
+   </api/system>` infrastructure independently of :doc:`buildc
+   </api/buildc>`.
 
-- You want to avoid dependency on a particular-make tool.
+.. class:: hidden
 
-Contra-Indications
-~~~~~~~~~~~~~~~~~~
+   .. toctree::
+      :glob:
+      :titlesonly:
 
-- You have an existing simple build system with low complexity and low
-  maintenance costs.
-
-- You have a conventional compile-link-package build process.
-
-- You have a frictionless build file description system, and use tools
-  like Autoconf, Automake, or Gyp without friction.
-
-Getting Started
----------------
-
-System and Embedded Buildcloth
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can download and install Buildcloth using PyPi using ``pip`` or
-``easy_install`` and then import classes from the buildcloth module as
-needed.
-
-Alternatively, you can save an "embedded" version of buildcloth into
-the ``__init__.py`` file of a ``makecloth/`` or ``ninjacloth/``
-directory/module in your project's repository, and write your build
-system definitions sub-modules within this module. This has the
-advantage of shielding your project's build system from changes in
-Buildcloth.
-
-The embedded method is probably prefered for most projects.
-
-Bootstrapping Buildcloth
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Simple
-``````
-
-If you specify your entire buildsystem with buildcloth, you can simply
-create a ``bootstrap.py`` file, that:
-
-#. Imports necessary buildcloth dependencies.
-
-#. Contains any neccessary target discovery processes or hard-coded
-   information.
-
-#. Writes the output to a ``Makefile`` file.
-
-This is the most straightforward way to generate a build system, and
-is sufficient for some build systems; however, there are some cases
-where this method is less effective. For example, if you have a very
-complex build system, or want to transition slowly to using
-Buildcloth, or need to rebuild Makefile components based on changing
-input data, then consider the more typical operational pattern.
-
-For Ninja-based build systems, this method is the most common,
-although it may be wise to to partition logic and build specification
-in these more complex ninja-specific buildcloth systems.
-
-Typical - Make
-``````````````
-
-For complex Make-based systems, and for systems that use a hybrid
-build system that consists of both hand-crafted Makefiles and
-automatically generated Makefiles, you may use the following pattern:
-
-#. Some quantity of Makefile code in a main root level ``Makefile``.
-
-#. A number of Python scripts in the executable file with the
-   following construct:
-
-   .. code-block:: python
-
-      import sys
-      from makecloth import MakefileCloth
-
-      m = MakefileCloth()
-
-      # manipulations of ``m``
-
-      if __name__ == '__main__'
-          m.write(sys.argv[1])
-
-#. In your Makefile, code that resembles the following to generate and
-   include the build system:
-
-   .. code-block:: make
-
-      PYTHONBIN = /usr/bin/python
-
-      -include $(output)/makefile.generated
-      -include $(output)/makefile.deploy
-      -include $(output)/makefile.package
-
-      $(output)/makefile.%:makecloth/%.py
-          @$(PYTHONBIN) $< $@
-
-    .. note:: You can specify these generated makefiles as ``PHONY``
-       targets to ensure that they are always regenerated, if needed.
-
-Define Build Systems
---------------------
-
-Create instances of :class:`~makefile.MakefileCloth()` and
-:class:`~ninja.NinjaFileCloth()`, which are sub-classes of
-:class:`~cloth.BuildCloth()`, and use the instance methods of these
-classes to define and generate buildsystem objects.
-
-:class:`~makefile.MakefileCloth()` and :class:`~ninja.NinjaFileCloth()`
-both provide methods for defining the content of the build files while
-:class:`~cloth.BuildCloth()` provides a common set of methods for
-generating build system output.
-
-Begin using buildcloth to define a ``Makefile``, create a Python
-module file with the following content to create a
-:class:`~makefile.MakefileCloth()` object:
-
-.. code-block:: python
-
-   from buildcloth.makefile import MakefileCloth
-
-   m = MakefileCloth()
-
-To create the equivelent :class:`~ninja.NinjaFileCloth()` object to
-define a ``ninja.build`` file, use the following:
-
-.. code-block:: python
-
-   from buildcloth.ninja import NinjaFileCloth
-
-   n = NinjaFileCloth()
-
-Specify Targets and Build Rules
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-See the full API documentation for Buildcloth, in particular:
-
-- :doc:`/api/makefile`
-
-- :doc:`/api/ninja`
-
-Consider the following example Buildcloth definition:
-
-.. code-block:: python
-
-   build = ['name.h', 'events.h', 'builders.h']
-
-   m.section_break('generate headers')
-
-   for b in build:
-      dep = b.rsplit('.', 1)[0] + '.cpp'
-
-      m.target(target=b, dependency=[dep, 'source/system_configure.h'])
-      m.job('buildscripts/header_metadata.py ' + b)
-      m.msg('[headers]: generated build system')
-
-In this example, you generate a build system with three targets, for
-each ``.h`` file in the ``build`` list. The corresponding Makefile
-would resemble the following:
-
-.. code-block:: make
-
-   ######## generate headers #########
-
-   name.h:name.cpp source/system_configure.h
-         buildscripts/header_metadata.py name.h
-   events.h:events.cpp source/system_configure.h
-         buildscripts/header_metadata.py name.h
-   builders.h:builders.cpp source/system_configure.h
-         buildscripts/header_metadata.py name.h
-
-
-This is, of course, not the most efficient way to specify these rules,
-and is equivelent to the following makefile.
-
-.. code-block:: make
-
-   ######## generate headers #########
-
-   targets = name.h events.h builders.h
-   deps = $(subst .h,.cpp,$(targets))
-
-   $(targets):$(deps)
-   %.h:%.cpp source/system_configure.h
-         buildscripts/header_metadata.py $<
-
-However, the Buildcloth format is more clear, and allows you to read
-and debug the makefile directly, to ensure build correctness with
-greater ease. The efficiency and power of Buildcloth abstraction is
-greater for more complex build systems.
-
-The methods for defining Ninja files are roughly equivelent but are
-idiomatic for Ninja files.
-
-Manage Build Output
-~~~~~~~~~~~~~~~~~~~
-
-When you've defined your build system, use the output control methods
-to write build output. In particular, read the :doc:`/api/cloth` API
-documentation. The :meth:`~cloth.BuildCloth.print_content()` method
-prints the output of the defined makefile, for debugging:
-
-.. code-block:: python
-
-   m.print_content()
-
-To write to a file directly, use the :meth:`~cloth.BuildCloth.write()`
-method:
-
-.. code-block:: python
-
-   m.write(<filename>)
-
-Use Blocks to Organize and Manipulate Buildcloth Objects
---------------------------------------------------------
-
-The examples thus far have used a single :term:`block` or section of
-Makefile content per-:class:`~makefile.MakefileCloth()` or
-:class:`~ninja.NinjaFileCloth()` object. Buildcloth supports blocks
-which make it possible for you to specify build systems out of order
-and with a greater possibility for reuse. Add a ``block=`` parameter
-to any build specification method call, and then use the
-:meth:`~cloth.BuildCloth.write_block()`,
-:meth:`~cloth.BuildCloth.print_block()`, and
-:meth:`~cloth.BuildCloth.get_block()` methods to access a specific
-block.
-
-Consider the following example that uses two
-:class:`~makefile.MakefileCloth()` objects to reuse build system
-elements:
-
-.. code-block:: python
-
-   r = MakefileCloth()
-   m = MakefileCloth()
-
-   r.job('mkdir -p $@', block='setup')
-   r.msg('[setup]: created $@')
-
-   r.job('touch $@', block='stat')
-   r.msg('[setup]: touched $@')
-
-   m.target('build/')
-   m.block(r.get_block('setup'))
-   m.target('build/tools/')
-   m.block(r.get_block('setup'))
-
-   m.target('build/tools/index.html')
-   m.block(r.get_block('stat'))
-   m.target('build/index.html')
-   m.block(r.get_block('stat'))
-
-   m.print_content()
-
-Next Steps
-----------
-
-Consider :doc:`/api/rules` as a higher level and cross-system
-abstraction on build system generation.
+      /tutorial/*

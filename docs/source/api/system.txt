@@ -1,0 +1,7 @@
+=====================================
+``system`` -- Build System Generation
+=====================================
+
+.. automodule:: system
+   :members:
+   :private-members:

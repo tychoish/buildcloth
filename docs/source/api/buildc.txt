@@ -1,0 +1,88 @@
+.. _buildc:
+
+=================================================
+``buildc`` -- Command Line Build System Interface
+=================================================
+
+Synopsis
+--------
+
+``buildc`` is a command line front end for the
+:class:`~system.BuildSystemGenerator()` class. ``buildc``
+:class:`~system.BuildSystemGenerator()` provide a pure-Python build
+system orchestration tool that resolves orders dependency graphs
+between and attempts to run build processes as concurrently as
+possible.
+
+See :doc:`/tutorial` for examples of Buildcloth use.
+
+Options
+-------
+
+.. program:: buildc
+
+.. option:: --log <filename>, -l <filename>
+
+   Specify the name of a file to write the full log of Buildcloth
+   activity. This log is verbose, (i.e. it includes ``INFO``
+   messages).
+
+.. option:: --debug
+
+   Increase the logging verbosity to include all ``DEBUG``
+   messages. You may specify :option:`--log` to write these messages
+   to a log file.
+
+.. option:: --jobs <number>, -j <number>
+
+   Specify the number of worker processes to run. Defualts to the
+   numer of CPU threads/processes on the system. These processes are
+   individual Python :mod:`multiprocessing` processes used at the top
+   level of the build system. Your build system process may define or
+   enable concurrency at different levels.
+
+.. option:: --tool <name>, -t <name>
+
+   Defaults to native execution using a :class:`~system.BuildSystem()`
+   build tool generated using
+   :class:`~system.BuildSystemGenerator()`. You may also specify
+   ``<make>`` to use ``buildc`` as a metabuild tool, which generates a
+   file named ``Makefile`` using the same input as other build
+   systems.
+
+   The entry point to the ``Makefile`` is not necessarily defined.
+
+.. option:: --file <filename>, -f <filename>
+
+   Specify the filename of a buildc specification file.
+
+   Acceptable file extensions are: ``.yaml``, ``.yml``, and
+   ``.json``. Extensions must match file type.
+
+   Defaults to ``buildc.yaml`` in the current directory.
+
+   You may specify :option:`--file` multiple times.
+
+.. option:: --check, -c
+
+   Specify the method to test if a target needs to be
+   rebuilt. Defaults to comparing the ``mtime`` of the dependency and
+   the target. Specify ``hash`` to comare the ``md5`` checksum of the
+   files, and ``force`` to unconditionally rebuild all targets or
+   ``ignore`` to rebuild *no* targets.
+
+.. option:: --path <path>
+
+   Specify paths to append to the Python-path. You may specify
+   :option:`--path`.
+
+.. option:: <stages>
+
+   Optional. A list of stages or targets in the build system to
+   run. If you specify *one* stage, ``buildc`` builds only that stage
+   and its specified dependencies. If you specify multiple stages, ,
+   ``buildc`` compiles the build system and then runs all build stages
+   (or targets) that precede the specified stage that appears *latest*
+   in the build sequence.
+
+   If you specify *no* stages ``buildc`` runs *all* specified stages.

@@ -4,15 +4,23 @@ Glossary
 
 .. glossary::
    :sorted:
-   
+
    Makefile
       The default filneame for files that specify build targets and
       procedures for ``make``-compatible (GNU make and others,) build
       tools.
-   
+
    ninja.build
       The default filneame for files that describe ``ninja`` build
       systems, include rules, dependencies, and build targets.
 
    block
       An internal structure in :class:`~cloth.BuildCloth()` that allows.
+
+   JSON
+      A standard data interchange and serialization format.
+
+   YAML
+      A data interchange and serialization format, that is a
+      functional super-set of JSON. Provides a more natural editing
+      experience for humans.

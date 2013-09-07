@@ -1,0 +1,151 @@
+====================
+Design Build Systems
+====================
+
+Processing source files into render or compiled output is difficult
+because: the specific process is potentially quite complex and
+difficult to specify, and the efficiency of a build process can have a
+huge impact on productivity. Buildcloth is an attempt to make the
+specification of build systems easier, more mountable, and *less*
+esoteric.
+
+This document outlines the design process for a build system. These
+concepts are useful for all build systems, but are particularly
+applicable for Buildcloth use.
+
+Design Goals and Limitations
+----------------------------
+
+Concurrency
+~~~~~~~~~~~
+
+Much of the work of a build process is embarrassingly
+parallel. At least modestly so.
+
+.. admonition:: Example
+
+   Consider compiling a dozens of source files into a binary. For
+   C/C++ you first the source files into object files, and then you
+   link object files together to create a binary. While you can't link
+   the software while you compile object files, you can build all or
+   most of the object files at the same time.
+
+There are two basic approaches to implementing a concurrent build
+system. concurrent systems (and a large number of variations,) but
+*all* approaches require breaking app art the entire build process into
+many smaller sequences of logical "jobs" or sub-tasks. Smaller units
+of work make it possible to construct current build systems that are
+capable of parallel execution. To model a build system either:
+
+1. Take all granular tasks and specify dependency information. The
+   build tool will assemble a dependency **graph** (directed acylcic
+   graph, or DAG) and then transverse the graph to determine the
+   execution order and potential for parallelism of each task.
+
+2. Split the process into a series of sequences and **stages** where a
+   stage refers to a group of tasks with no dependencies, and
+   sequences refer to a specific ordering of tasks that depend upon
+   each other. Build processes with multiple stages are themselves a
+   sequence.
+
+The graph method is the more generically applicable case, and makes it
+possible to add new kinds of tasks with new sets of dependencies
+without having a global view of the build system. However, stage
+based-approaches make the possibilities for parallelism more explicit
+and may be easier to maintain for some kinds projects.
+
+Even if you use a build system that supports graph analysis, you can
+use a stage-based metaphor to think about the overriding
+architecture of the build system.
+
+.. seealso:: "`Concurrency is Not Parallelism <http://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&ved=0CDEQtwIwAA&url=http%3A%2F%2Fvimeo.com%2F49718712&ei=FlkhUs2XHqq9sAT84IHwAw&usg=AFQjCNHucKx8OTZ-G4kesNTSCjE2QI9SOg&sig2=8JNzvhdXbp98yg_0wFcy2g&bvm=bv.51495398,d.cWc>`_"
+   a talk about concurrent design.
+
+Process Creation
+~~~~~~~~~~~~~~~~
+
+There is a certain fixed cost to running a program, including commands
+in shell instances. There is a trade-off between breaking the build
+process into smaller components that require the build tool to create
+larger numbers of processes and having larger "step" that can
+ameliorate the process creation costs.
+
+In general, if you have a task that requires non-trivial disk I/O and
+CPU use, then process creation is *probably* worth the cost; however,
+creating hundreds or even several dozen of processes per second will
+impede performance at some point.
+
+Performance Analysis and Rebuilding
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+
+   When testing a build system test both the total run time of an
+   operation *and* the percentage of CPU utilization. Test these
+   aspects of the build process as you develop your build system to
+   measure progress and performance.
+
+   Furthermore,
+
+There are three general tests of build performance:
+
+Build From Scratch
+``````````````````
+
+These tests measure the total time to build all dependencies.
+
+In general this measure the largest amount of time that a build can
+take. This time should be reasonably stable between different build
+implementations.
+
+No-op Builds
+````````````
+
+These tests measure the amount of overhead of the build system
+tool. Collect *no-op* build from re-running a build immediately
+following a successful build.
+
+Typical Rebuild
+```````````````
+
+These tests measure the amount of time a common rebuild takes. This
+measure the more typical amount of work required for testing small to
+moderate size changes on the build system.
+
+These times can vary a lot depending on the shape of the dependency
+graph and the way that the build system handles rebuilding. If,
+these measures equal or approach "from scratch" times, then the
+build process itself is not very *incremental* or there's another
+inefficiency in the dependency graph.
+
+Incremental rebuilds are great for development productivity because
+they minimize unnecessary work and allow quick feedback cycles during
+the development process.
+
+Maintenance Costs and Discovery
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As projects develop and grow, build systems necessarily grow and gain
+complexity. The best build systems account for the potential for
+growth and provide ways to add new components to the software with
+no or minimal build system changes. Realistically, small build system
+changes are always needed, but the implementation of build systems
+should attempt to minimize the kind amount of specialized knowledge of
+the build process or the architecture of the system.
+
+Ideally, the build system or the meta-build tool can generate the
+build system based on the names of files, or other
+information. Nevertheless, its inevitable that developers will need to
+add new build targets and change build processes throughout the course
+of development. The best build systems will be able to ameliorate
+these costs and make the build process as extensible as possible.
+
+User Interaction
+~~~~~~~~~~~~~~~~
+
+A factor in the complexity and difficulty of Building a project is
+that most build operations, depending on project, *are* not "rebuild
+everything" operations. Often a developer or user will need to build
+only a single component. The build system must provide easy to use
+methods that allow developers to build only the parts that they need
+without over building.

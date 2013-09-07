@@ -7,9 +7,9 @@ Modules
 
 .. toctree::
    :glob:
-   :maxdepth: 1
+   :titlesonly:
 
-   api/*
+   /api/*
 
 Additional Resources
 --------------------
@@ -23,13 +23,12 @@ may be helpful, in particular. For more information consider:
 
 - The `ninja documentation <http://martine.github.com/ninja/manual.html>`_
 
-Additional :doc:`buildcloth tutorial </tutorial>` provide a good
+Additional :doc:`buildcloth tutorials </tutorial>` provide a good
 introduction to basic buildcloth use.
 
 As a metabuild tool, Buildcloth has no dependencies outside of the
 Python standard library and the build-dependency on `nose`_ for to run
-unit tests. As a build tool, buildcloth depends optionally on PyYAML.
-
-
+unit tests. As a build system, buildcloth depends optionally on
+PyYAML.
 
 .. _`nose`: https://nose.readthedocs.org/en/latest/
