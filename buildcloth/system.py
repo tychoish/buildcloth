@@ -1017,6 +1017,13 @@ def narrow_buildsystem(targets, bs):
 
     targets = set([targets])
 
+    for target in targets:
+        if target not in bs._process_tree:
+            logger.critical('cannot rebuild nonextant target named: {0}'.format(target))
+            raise TargetError
+        else:
+            logger.debug('{0} is a target that exists. Resolving dependencies'.format(target))
+
     bsg = BuildSystemGenerator(bs.funcs)
 
     safety = 0
@@ -1032,14 +1039,9 @@ def narrow_buildsystem(targets, bs):
                 targets.add(i)
                 resolve(bs._process_tree[i], i)
 
-    for target in targets:
-        if target not in bs._process_tree:
-            logger.critical('cannot rebuild nonextant target named: {0}'.format(target))
-            raise TargetError
-        else:
-            logger.debug('{0} is a target that exists. Resolving dependencies'.format(target))
 
-            resolve(bs._process_tree[target], target)
+    for target in targets.copy():
+        resolve(bs._process_tree[target], target)
 
     bsg.ingest( ( bs.specs[target] for target in targets )  )
     bsg.finalize()

@@ -8,7 +8,7 @@ These tutorials introduce specific actions and operations using
 Buildcloth tools.
 
 :doc:`/tutorial/design-buildsystems`
-   A high level introduction to build
+   A high level introduction to build system design and implementation.
 
 :doc:`/tutorial/generate-makefiles`
    Describes the process of using buildcloth meta-build API to
@@ -19,7 +19,7 @@ Buildcloth tools.
    buildsystems using :doc:`buildc </api/buildc>` which provides
    wrapper around :doc:`system.py </api/system>`.
 
-:doc:`/tutorial/custom-buildsystem`
+:doc:`/tutorial/custom-buildsystems`
    Introduces the possibility of using the :doc:`system.py
    </api/system>` infrastructure independently of :doc:`buildc
    </api/buildc>`.
