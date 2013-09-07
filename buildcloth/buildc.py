@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from multiprocessing import cpu_count
 from buildcloth.makefile import MakefileCloth
-from buildcloth.system import BuildSystemGenerator, is_function, narrow_buildsysteme
+from buildcloth.system import BuildSystemGenerator, is_function, narrow_buildsystem
 
 import sys
 import argparse
@@ -21,8 +21,6 @@ def _import_strings():
     try:
         from buildc import strings
     except ImportError:
-        from buildc import strs as strings
-    else:
         strings = {}
 
     if is_function(strings):
@@ -72,19 +70,10 @@ def stages(jobs, stages, file, check):
 
     if not stages:
         bsg.system.run()
-    elif len(stages) == 1:
-        bsg = narrow_buildsystem(stages[0], bsg.system)
+    else:
+        bsg = narrow_buildsystem(stages, bsg.system)
         bsg.system.workers(jobs)
         bsg.run()
-    else:
-        highest_stage = 0
-
-        for stage in stages:
-            idx = bsg.get_stage_index(stage)
-            if idx > highest_stage:
-                highest_stage = idx
-
-        bsg.run_part(stop=highest_stage, strict=False)
 
 
 ############### functions to generate makefiles ###############
@@ -213,7 +202,7 @@ def _load_build_specs(files):
                 elif fn.endswith('yaml') or fn.endswith('yml'):
                     for i in yaml.safe_load_all(f):
                         i = BuildSystemGenerator.process_strings(i, strings)
-                        targets append(i)
+                        targets.append(i)
                 else:
                     logger.warning('format of {0} is unclear, not parsing'.format(fn))
         except OSError:
@@ -235,9 +224,9 @@ def cli_ui():
                              buildcloth's own build runners. Specify another build tool \
                              to use buildc as a metabuild tool.")
     parser.add_argument('--file', '-f', action='append',
-                        default=[os.path.join(os.getcwd(), 'buildc.yaml')])
+                        default=list())
     parser.add_argument('--check', '-c', action='append',
-                        default='mtime', choices=['mtime', 'hash', 'force', 'ignore'],
+                        default='mtime', choices=['mtime', 'force', 'ignore'],
                         help='for buildcloth runners, specifies which to use for testing dependency rebuilds.')
 
     parser.add_argument('--path', '-p', action='append',
@@ -259,6 +248,12 @@ def cli_ui():
         logging.basicConfig(filename=args.log, level=log_level)
     else:
         logging.basicConfig(level=log_level)
+
+    if args.file == []:
+        for fn in [ 'buildc.yaml', 'buildc.yml', 'buildc.json', 'buildc.jsn' ]:
+            fqpn = os.path.join(os.getcwd(), fn)
+            if os.path.exists(fqpn):
+                args.file.append(fqpn)
 
     return args
 

@@ -439,8 +439,8 @@ class BuildSystemGenerator(object):
        stage: <str>
        ...
 
-    See :ref:`build-stages` for complete documentation of the input data format
-    and its use.
+    See :doc:`/tutorial/use-buildc` for documentation of the input data
+    format and its use.
     """
 
     def __init__(self, funcs=None):
@@ -1011,13 +1011,12 @@ class BuildSystemGenerator(object):
             logger.debug('added job to stage: {0}'.format(spec['stage']))
             return True
 
-def narrow_buildsystem(target, bs):
+def narrow_buildsystem(targets, bs):
     if not isinstance(bs, BuildSystemGenerator):
         raise TargetError
-    elif target not in bs._process_tree:
-        raise TargetError
 
-    targets = set([target])
+    targets = set([targets])
+
     bsg = BuildSystemGenerator(bs.funcs)
 
     safety = 0
@@ -1033,7 +1032,14 @@ def narrow_buildsystem(target, bs):
                 targets.add(i)
                 resolve(bs._process_tree[i], i)
 
-    resolve(bs._process_tree[target], target)
+    for target in targets:
+        if target not in bs._process_tree:
+            logger.critical('cannot rebuild nonextant target named: {0}'.format(target))
+            raise TargetError
+        else:
+            logger.debug('{0} is a target that exists. Resolving dependencies'.format(target))
+
+            resolve(bs._process_tree[target], target)
 
     bsg.ingest( ( bs.specs[target] for target in targets )  )
     bsg.finalize()
