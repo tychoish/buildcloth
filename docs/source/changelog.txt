@@ -15,7 +15,7 @@ Release 0.2.0
 - Assorted Bug fixes.
 - Native-Python build system and automation, including :mod:`stages`
   and :mod:`system`.
-- Command line front-end for :mod:`system`, called :ref:`buildc <dbuildc>`.
+- Command line front-end for :mod:`system`, called :ref:`buildc <buildc>`.
 - Vast improvements to test coverage.
 
 Release 0.1.0

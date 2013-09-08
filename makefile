@@ -46,11 +46,11 @@ $(output)/ninjacloth.py:$(modsrc)/ninja.py $(output)/ $(modsrc)/cloth.py bin/bui
 embedded:$(output)/makecloth.py $(output)/ninjacloth.py
 
 docs:
-	@$(MAKE) -C docs/ html
+	@$(MAKE) -C docs/ publish
 stage-docs:
 	@$(MAKE) -C ../institute/ stage push
 push-docs:
 	@$(MAKE) -C ../institute/ publish push
-release:all
+release:
 	python setup.py sdist upload
 	@$(MAKE) -C ../institute/ stage push
