@@ -67,8 +67,7 @@ Options
 
    Specify the method to test if a target needs to be
    rebuilt. Defaults to comparing the ``mtime`` of the dependency and
-   the target. Specify ``hash`` to comare the ``md5`` checksum of the
-   files, and ``force`` to unconditionally rebuild all targets or
+   the target. Specify ``force`` to unconditionally rebuild all targets or
    ``ignore`` to rebuild *no* targets.
 
 .. option:: --path <path>

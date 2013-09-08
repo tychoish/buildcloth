@@ -14,10 +14,8 @@ ongoing development tasks.
 - Adjust size of worker pools based on size of task pool. Allow users
   to specify size of pools more granularity.
 
-- Improve testing of systems that mix "stages" and
-
-- Add the ability to randomize job ordering.
+- Add the ability to randomize job ordering to increase robustness.
 
 - Explore integrate "narrowing" feature at more levels of the system.
 
-- Cache rebuild logs.
+- Cache rebuild logs, to support *correct* hash testing.

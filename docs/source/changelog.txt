@@ -7,14 +7,15 @@ See :doc:`/roadmap` for future development plans.
 Release 0.2.0
 -------------
 
-:date: *pending*
+:date: 2013-09-08
 
 - Improved :meth:`~cloth.BuildCloth.cloth()` semantics.
 - Improved :doc:`/tutorial` documentation.
 - Python 3 compatibility.
 - Assorted Bug fixes.
-- Build System support for pure-python build system assembly and
-  execution.
+- Native-Python build system and automation, including :mod:`stages`
+  and :mod:`system`.
+- Command line front-end for :mod:`system`, called :ref:`buildc <dbuildc>`.
 - Vast improvements to test coverage.
 
 Release 0.1.0
