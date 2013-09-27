@@ -1,6 +1,7 @@
 from buildcloth.err import DependencyCheckError
 from buildcloth.dependency import DependencyChecks
 from unittest import TestCase, skip
+import sys
 import os
 import time
 
@@ -13,7 +14,10 @@ def write(fname, content):
         f.write(content)
 
 def breath():
-    time.sleep(0.01)
+    if sys.platform == 'darwin':
+        time.sleep(0.25)
+    else:
+        time.sleep(0.01)
 
 class TestDependencyChecking(TestCase):
     @classmethod
