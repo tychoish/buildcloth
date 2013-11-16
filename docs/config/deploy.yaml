@@ -1,0 +1,16 @@
+target: push
+host:
+  username: institute
+  hostname: foucault.cyborginstitute.net
+paths:
+  remote: /home/institute/public/buildcloth
+  local: public
+---
+target: stage
+host:
+  username: institute
+  hostname: foucault.cyborginstitute.net
+paths:
+  remote: /home/institute/staging/buildcloth
+  local: public
+...

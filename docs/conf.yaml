@@ -1,0 +1,15 @@
+git:
+  repo: buildcloth
+  url: git@github.com:tychoish/buildcloth.git
+project:
+  name: buildcloth
+  url: http://cyborginstitute.org
+  tag: 'projects/buildcloth'
+paths:
+  buildsystem: build/institute-tools
+  builddata: config
+  source: source
+  output: build
+system: 
+  tools: git@github.com:cyborginstitute/institute-tools.git
+...

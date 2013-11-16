@@ -13,11 +13,16 @@
 
 import sys, os
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('../buildcloth/'))
-sys.path.insert(0, os.path.abspath('../'))
+project_root = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(project_root)
+from bootstrap import buildsystem, master_conf
+sys.path.append(os.path.join(project_root, buildsystem))
+from utils.config import get_conf
+
+conf = get_conf(project_root)
+
+sys.path.insert(0, os.path.abspath(os.path.join('..', 'buildcloth/')))
+sys.path.insert(0, os.path.abspath('..'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -55,15 +60,13 @@ intersphinx_mapping = {
 
 # -- Options for HTML output ---------------------------------------------------
 
-git_name = 'dtf'
-
 html_theme = 'cyborg'
-html_theme_path = ['themes']
+html_theme_path = [os.path.join(conf.paths.projectroot, conf.paths.buildsystem, 'themes')]
 html_static_path = ['.static']
 
 html_use_smartypants = True
 html_theme_options = {
-    'project': git_name,
+    'project': conf.project.name,
     'ga_code': 'UA-2505694-4'
 }
 
@@ -80,4 +83,4 @@ html_use_index = True
 html_show_sourcelink = False
 html_show_sphinx = False
 html_show_copyright = True
-htmlhelp_basename = 'dtf'
+htmlhelp_basename = conf.project.name
